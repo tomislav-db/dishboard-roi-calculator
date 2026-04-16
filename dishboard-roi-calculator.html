@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ROI Calculator — Dishboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50:  '#eef5ff',
+              100: '#d9e8ff',
+              200: '#bcd5ff',
+              300: '#8eb9ff',
+              400: '#5b91ff',
+              500: '#3468fa',
+              600: '#1e48ef',
+              700: '#1636db',
+              800: '#182db1',
+              900: '#192b8c',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+
+    /* Step transition */
+    .step-enter { opacity: 0; transform: translateX(32px); }
+    .step-leave { opacity: 0; transform: translateX(-32px); }
+    .step-active { transition: opacity 0.3s ease, transform 0.3s ease; }
+
+    /* Slider styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #e2e8f0;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #1e48ef;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(30,72,239,0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 3px 10px rgba(30,72,239,0.45);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #1e48ef;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 6px rgba(30,72,239,0.35);
+    }
+
+    /* Gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #1e48ef 0%, #5b91ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Card hover */
+    .type-card {
+      transition: all 0.2s ease;
+    }
+    .type-card:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Country card */
+    .country-card {
+      transition: all 0.2s ease;
+    }
+    .country-card:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Glow on active result */
+    .roi-hero {
+      background: linear-gradient(135deg, #1e48ef 0%, #3468fa 50%, #5b91ff 100%);
+    }
+
+    /* Subtle background pattern */
+    body {
+      background-color: #f1f5f9;
+      background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* Count animation */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeInUp {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    /* Number input hide arrows */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+  </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center px-4 py-12 font-sans">
+
+  <div
+    x-data="calculator()"
+    x-cloak
+    class="w-full max-w-2xl"
+  >
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 mb-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 3h18v18H3V3z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M7 17l4-6 3 4 2-3 3 5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-slate-800 font-bold text-lg tracking-tight">Dishboard</span>
+      </div>
+      <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">ROI Calculator</h1>
+      <p class="text-slate-500 mt-1 text-sm">Find out how much your restaurant is leaking — and how to stop it.</p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="flex items-center justify-center gap-2 mb-8" x-show="step <= 5">
+      <template x-for="s in [1,2,3,4,5]" :key="s">
+        <div class="flex items-center gap-2">
+          <div
+            class="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-all duration-300"
+            :class="{
+              'bg-brand-600 text-white shadow-md shadow-brand-200': step === s,
+              'bg-brand-600 text-white opacity-80': step > s,
+              'bg-white text-slate-400 border border-slate-200': step < s
+            }"
+          >
+            <template x-if="step > s">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </template>
+            <template x-if="step <= s">
+              <span x-text="s"></span>
+            </template>
+          </div>
+          <span
+            class="text-xs font-medium hidden sm:block transition-colors duration-300"
+            :class="step >= s ? 'text-slate-700' : 'text-slate-400'"
+            x-text="['Country', 'Business', 'Numbers', 'Plan', 'Savings'][s-1]"
+          ></span>
+          <template x-if="s < 5">
+            <div class="w-6 h-px" :class="step > s ? 'bg-brand-600' : 'bg-slate-200'"></div>
+          </template>
+        </div>
+      </template>
+    </div>
+
+    <!-- CARD -->
+    <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/80 border border-slate-100 overflow-hidden">
+
+      <!-- ==================== STEP 1: COUNTRY ==================== -->
+      <div x-show="step === 1" class="p-8 sm:p-10">
+        <h2 class="text-2xl font-bold text-slate-900 mb-1">Where is your restaurant?</h2>
+        <p class="text-slate-500 text-sm mb-8">We'll use local benchmarks and your currency.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <template x-for="c in countries" :key="c.code">
+            <button
+              @click="selectCountry(c.code)"
+              class="country-card rounded-2xl border-2 p-6 text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-400"
+              :class="country === c.code
+                ? 'border-brand-600 bg-brand-50 shadow-md shadow-brand-100'
+                : 'border-slate-100 bg-slate-50 hover:border-slate-300'"
+            >
+              <div class="text-4xl mb-3" x-text="c.flag"></div>
+              <div class="font-semibold text-slate-800 text-sm" x-text="c.name"></div>
+              <div class="text-xs text-slate-400 mt-1" x-text="c.currency + ' ' + c.symbol"></div>
+            </button>
+          </template>
+        </div>
+
+        <div class="mt-8 flex justify-end">
+          <button
+            @click="step = 2"
+            :disabled="!country"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
+            :class="country
+              ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200'
+              : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+          >
+            Continue
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 2: BUSINESS TYPE ==================== -->
+      <div x-show="step === 2" class="p-8 sm:p-10">
+        <button @click="step = 1" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-6 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h2 class="text-2xl font-bold text-slate-900 mb-1">What type of business do you run?</h2>
+        <p class="text-slate-500 text-sm mb-8">We'll pre-fill industry benchmarks for your segment.</p>
+
+        <div class="grid grid-cols-2 gap-4">
+          <template x-for="bt in businessTypes" :key="bt.key">
+            <button
+              @click="selectBusinessType(bt.key)"
+              class="type-card rounded-2xl border-2 p-5 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-400"
+              :class="businessType === bt.key
+                ? 'border-brand-600 bg-brand-50 shadow-md shadow-brand-100'
+                : 'border-slate-100 bg-slate-50 hover:border-slate-300'"
+            >
+              <div class="text-3xl mb-3" x-text="bt.icon"></div>
+              <div class="font-semibold text-slate-800 text-sm leading-tight" x-text="bt.label"></div>
+              <div class="text-xs text-slate-400 mt-1" x-text="bt.sub"></div>
+            </button>
+          </template>
+        </div>
+
+        <div class="mt-8 flex justify-end">
+          <button
+            @click="step = 3"
+            :disabled="!businessType"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
+            :class="businessType
+              ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200'
+              : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+          >
+            Continue
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 3: NUMBERS ==================== -->
+      <div x-show="step === 3" class="p-8 sm:p-10">
+        <button @click="step = 2" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-6 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h2 class="text-2xl font-bold text-slate-900 mb-1">Tell us your numbers</h2>
+        <p class="text-slate-500 text-sm mb-8">Industry benchmarks are pre-filled — adjust if you know your actuals.</p>
+
+        <!-- Monthly Revenue -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-semibold text-slate-700">Monthly Revenue</label>
+            <div class="flex items-center gap-1">
+              <span class="text-xs font-medium text-slate-500" x-text="currentCountry().symbol"></span>
+              <input
+                type="number"
+                x-model.number="monthlyRevenue"
+                @input="clampRevenue()"
+                class="w-28 text-right text-sm font-bold text-slate-900 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+            </div>
+          </div>
+          <input
+            type="range"
+            x-model.number="monthlyRevenue"
+            :min="currentCountry().revenueMin"
+            :max="currentCountry().revenueMax"
+            :step="currentCountry().revenueStep"
+            class="w-full accent-brand-600"
+          />
+          <div class="flex justify-between text-xs text-slate-400 mt-1">
+            <span x-text="formatCurrency(currentCountry().revenueMin)"></span>
+            <span x-text="formatCurrency(currentCountry().revenueMax)"></span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Industry benchmark for <span class="font-medium text-slate-600" x-text="currentBusinessType().label"></span>:
+            <span class="font-semibold text-brand-600" x-text="formatCurrency(benchmark().revenue)"></span>/month
+          </p>
+        </div>
+
+        <!-- ── BAR: Do you serve food? ── -->
+        <div x-show="businessType === 'bar'" class="mb-8">
+          <label class="text-sm font-semibold text-slate-700 block mb-3">Does your venue serve food?</label>
+          <div class="flex gap-3">
+            <button
+              @click="hasFood = true; beverageRevenuePercent = 80"
+              class="flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
+              :class="hasFood ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
+            >
+              🍔 Yes, we serve food
+            </button>
+            <button
+              @click="hasFood = false; beverageRevenuePercent = 100"
+              class="flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
+              :class="!hasFood ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
+            >
+              🍸 Drinks only
+            </button>
+          </div>
+        </div>
+
+        <!-- ── BAR: Revenue split (only if has food) ── -->
+        <div x-show="businessType === 'bar' && hasFood" class="mb-8">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-semibold text-slate-700">Revenue Split</label>
+            <span class="text-sm font-bold text-slate-900">
+              <span class="text-slate-500">Food</span> <span x-text="(100 - beverageRevenuePercent) + '%'"></span>
+              &nbsp;/&nbsp;
+              <span class="text-slate-500">Drinks</span> <span x-text="beverageRevenuePercent + '%'"></span>
+            </span>
+          </div>
+          <!-- Visual split bar -->
+          <div class="flex rounded-lg overflow-hidden h-5 mb-3 text-xs font-semibold">
+            <div class="flex items-center justify-center bg-emerald-500 text-white transition-all duration-200" :style="'width:' + (100 - beverageRevenuePercent) + '%'" x-show="beverageRevenuePercent < 100">
+              <span x-show="(100 - beverageRevenuePercent) > 15" x-text="(100 - beverageRevenuePercent) + '%'"></span>
+            </div>
+            <div class="flex items-center justify-center bg-violet-500 text-white transition-all duration-200" :style="'width:' + beverageRevenuePercent + '%'">
+              <span x-show="beverageRevenuePercent > 15" x-text="beverageRevenuePercent + '%'"></span>
+            </div>
+          </div>
+          <input
+            type="range"
+            x-model.number="beverageRevenuePercent"
+            min="50"
+            max="100"
+            step="5"
+            class="w-full accent-brand-600"
+          />
+          <div class="flex justify-between text-xs text-slate-400 mt-1">
+            <span>50% drinks</span>
+            <span>100% drinks</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Industry benchmark for bars: <span class="font-semibold text-brand-600">80% beverages</span></p>
+        </div>
+
+        <!-- ── BAR: Pour Cost % ── -->
+        <div x-show="businessType === 'bar'" class="mb-8">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-semibold text-slate-700">Pour Cost %</label>
+            <span class="text-sm font-bold text-slate-900" x-text="pourCostPercent.toFixed(1) + '%'"></span>
+          </div>
+          <input
+            type="range"
+            x-model.number="pourCostPercent"
+            min="5"
+            max="50"
+            step="0.5"
+            class="w-full accent-brand-600"
+          />
+          <div class="flex justify-between text-xs text-slate-400 mt-1">
+            <span>5%</span>
+            <span>50%</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Industry benchmark: <span class="font-semibold text-brand-600">18–24%</span>
+            &nbsp;·&nbsp; Losses from over-pouring, spillage &amp; shrinkage
+          </p>
+        </div>
+
+        <!-- Food Cost % — hidden for bars with no food, shown for all others -->
+        <div x-show="businessType !== 'bar' || hasFood" class="mb-8">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-semibold text-slate-700" x-text="businessType === 'bar' ? 'Food Cost %' : 'Food Cost %'"></label>
+            <span class="text-sm font-bold text-slate-900" x-text="foodCostPercent.toFixed(1) + '%'"></span>
+          </div>
+          <input
+            type="range"
+            x-model.number="foodCostPercent"
+            min="5"
+            max="60"
+            step="0.5"
+            class="w-full accent-brand-600"
+          />
+          <div class="flex justify-between text-xs text-slate-400 mt-1">
+            <span>5%</span>
+            <span>60%</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            Industry benchmark for <span class="font-medium text-slate-600" x-text="currentBusinessType().label"></span>:
+            <span class="font-semibold text-brand-600" x-text="benchmark().foodCost + '%'"></span>
+            <template x-if="businessType === 'bar'"><span class="text-slate-400"> (food portion only)</span></template>
+          </p>
+        </div>
+
+        <!-- Monthly Invoices -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-semibold text-slate-700">Supplier Invoices per Month</label>
+            <input
+              type="number"
+              x-model.number="monthlyInvoices"
+              @input="clampInvoices(); updateAdminHours()"
+              @change="updateAdminHours()"
+              class="w-20 text-right text-sm font-bold text-slate-900 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand-400"
+            />
+          </div>
+          <input
+            type="range"
+            x-model.number="monthlyInvoices"
+            min="10"
+            max="300"
+            step="5"
+            @input="updateAdminHours()"
+            class="w-full accent-brand-600"
+          />
+          <div class="flex justify-between text-xs text-slate-400 mt-1">
+            <span>10</span>
+            <span>300</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-2">
+            Industry benchmark for <span class="font-medium text-slate-600" x-text="currentBusinessType().label"></span>:
+            <span class="font-semibold text-brand-600" x-text="benchmark().invoices + ' invoices/month'"></span>
+          </p>
+        </div>
+
+        <div class="flex justify-end">
+          <button
+            @click="goToPlan()"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200 transition-all duration-200"
+          >
+            Continue
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 4: PLAN SELECTION ==================== -->
+      <div x-show="step === 4" class="p-8 sm:p-10">
+        <button @click="step = 3" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-6 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Back
+        </button>
+        <h2 class="text-2xl font-bold text-slate-900 mb-1">Choose your Dishboard plan</h2>
+        <p class="text-slate-500 text-sm mb-2">All plans include <strong class="text-slate-700">150 invoices/month</strong>. We'll subtract the annual cost from your savings.</p>
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <template x-for="tier in pricingTiers" :key="tier.key">
+            <button
+              @click="selectedTier = tier.key"
+              class="type-card rounded-2xl border-2 p-5 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-400 relative"
+              :class="selectedTier === tier.key
+                ? 'border-brand-600 bg-brand-50 shadow-md shadow-brand-100'
+                : 'border-slate-100 bg-slate-50 hover:border-slate-300'"
+            >
+
+              <p class="text-xs font-semibold uppercase tracking-wide mb-3"
+                :class="selectedTier === tier.key ? 'text-brand-600' : 'text-slate-400'"
+                x-text="tier.label + ' Plan'"></p>
+
+              <!-- Price -->
+              <div class="mb-1">
+                <span class="text-2xl font-extrabold text-slate-900" x-text="formatCurrency(tier.prices[country])"></span>
+                <span class="text-sm text-slate-400">/mo</span>
+              </div>
+              <p class="text-xs text-slate-400" x-text="formatCurrency(tier.prices[country] * 12) + '/year'"></p>
+
+              <!-- Selected indicator -->
+              <div
+                x-show="selectedTier === tier.key"
+                class="absolute top-3 right-3 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </button>
+          </template>
+        </div>
+
+        <!-- ── Cost Radar Add-on ── -->
+        <div class="mt-8 mb-6">
+          <div class="flex items-start justify-between gap-4 mb-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-700">Cost Radar</p>
+              <p class="text-xs text-slate-400 mt-0.5">Automatic price-change detection across all your suppliers — get alerted the moment a price creeps up.</p>
+            </div>
+            <span
+              class="shrink-0 text-xs font-bold px-2 py-1 rounded-lg"
+              :class="hasCostRadar ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500'"
+              x-text="hasCostRadar ? '+' + formatCurrency(currentCountry().radarPrice) + '/mo' : 'Optional'"
+            ></span>
+          </div>
+          <div class="flex gap-3">
+            <button
+              @click="hasCostRadar = true"
+              class="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
+              :class="hasCostRadar ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
+            >
+              ✓ Yes, add Cost Radar
+            </button>
+            <button
+              @click="hasCostRadar = false"
+              class="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
+              :class="!hasCostRadar ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
+            >
+              Not now
+            </button>
+          </div>
+        </div>
+
+        <!-- ── Invoice Volume ── -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-semibold text-slate-700">Invoice Volume</label>
+            <span class="text-sm font-bold text-slate-900">
+              <span x-text="planInvoices"></span>
+              <span class="text-slate-400 font-normal">/month</span>
+              <span
+                x-show="planInvoices > 150"
+                class="ml-1 text-xs font-bold text-amber-600"
+                x-text="'+' + formatCurrency(invoiceOverageMonthly()) + '/mo'"
+              ></span>
+            </span>
+          </div>
+          <input
+            type="range"
+            x-model.number="planInvoices"
+            min="150"
+            max="300"
+            step="50"
+            class="w-full accent-brand-600"
+          />
+          <!-- Tick labels -->
+          <div class="flex justify-between text-xs mt-1">
+            <span :class="planInvoices === 150 ? 'text-brand-600 font-semibold' : 'text-slate-400'">150</span>
+            <span :class="planInvoices === 200 ? 'text-brand-600 font-semibold' : 'text-slate-400'">200</span>
+            <span :class="planInvoices === 250 ? 'text-brand-600 font-semibold' : 'text-slate-400'">250</span>
+            <span :class="planInvoices === 300 ? 'text-brand-600 font-semibold' : 'text-slate-400'">300</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            150 included in all plans
+            <span x-show="planInvoices > 150">
+              · <span x-text="(planInvoices - 150) / 50"></span> extra block<span x-show="(planInvoices - 150) / 50 > 1">s</span>
+              at <span x-text="formatCurrency(currentCountry().invoiceBlockPrice)"></span>/50 invoices
+            </span>
+          </p>
+        </div>
+
+        <!-- ── Dynamic total strip ── -->
+        <div x-show="selectedTier" class="mb-6 rounded-2xl border border-brand-100 bg-brand-50 overflow-hidden">
+          <div class="px-4 py-3 space-y-1.5">
+            <!-- Tier base -->
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-slate-600" x-text="currentTier().label + ' plan'"></span>
+              <span class="font-semibold text-slate-800" x-text="formatCurrency(currentTier().prices[country]) + '/mo'"></span>
+            </div>
+            <!-- Radar add-on -->
+            <div x-show="hasCostRadar" class="flex items-center justify-between text-sm">
+              <span class="text-slate-500">+ Cost Radar</span>
+              <span class="font-semibold text-slate-700" x-text="'+' + formatCurrency(currentCountry().radarPrice) + '/mo'"></span>
+            </div>
+            <!-- Invoice overage -->
+            <div x-show="planInvoices > 150" class="flex items-center justify-between text-sm">
+              <span class="text-slate-500" x-text="'+ ' + planInvoices + ' invoices'"></span>
+              <span class="font-semibold text-slate-700" x-text="'+' + formatCurrency(invoiceOverageMonthly()) + '/mo'"></span>
+            </div>
+          </div>
+          <!-- Total -->
+          <div class="px-4 py-3 border-t border-brand-100 bg-white/60 flex items-center justify-between">
+            <span class="text-sm font-bold text-slate-800">Total</span>
+            <div class="text-right">
+              <span class="text-lg font-extrabold text-brand-700" x-text="formatCurrency(totalMonthlyPlan()) + '/mo'"></span>
+              <span class="text-xs text-slate-400 ml-2" x-text="formatCurrency(annualDishboardCost()) + '/year'"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2 flex justify-end">
+          <button
+            @click="goToResults()"
+            :disabled="!selectedTier"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
+            :class="selectedTier
+              ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200'
+              : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
+          >
+            Show My Savings
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 5: RESULTS ==================== -->
+      <div x-show="step === 5" class="overflow-hidden">
+
+        <!-- Back button -->
+        <div class="px-8 sm:px-10 pt-6">
+          <button @click="step = 4" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back to plan
+          </button>
+        </div>
+
+        <!-- Hero ROI section -->
+        <div class="roi-hero p-8 sm:p-10 text-center text-white">
+          <p class="text-brand-100 text-sm font-medium uppercase tracking-widest mb-2">Net Annual Return with Dishboard</p>
+          <div class="text-5xl sm:text-6xl font-black tracking-tight mb-2" x-text="formatCurrency(displayTotal)"></div>
+          <p class="text-brand-100 text-sm mb-4">Based on <span class="font-semibold text-white" x-text="currentCountry().name + ' · ' + currentBusinessType().label"></span>
+            <span x-show="!hasCostRadar" class="block text-brand-200 text-xs mt-1">+ <span x-text="formatCurrency(radarSavings())"></span> more available with Cost Radar</span>
+          </p>
+          <!-- Gross / cost split -->
+          <div class="inline-flex items-center gap-4 bg-white/10 rounded-2xl px-5 py-3 text-sm">
+            <div class="text-center">
+              <p class="text-brand-200 text-xs mb-0.5">Gross Savings</p>
+              <p class="font-bold text-white" x-text="formatCurrency(totalROI())"></p>
+            </div>
+            <div class="w-px h-8 bg-white/20"></div>
+            <div class="text-center">
+              <p class="text-brand-200 text-xs mb-0.5">Dishboard Cost</p>
+              <p class="font-bold text-rose-300" x-text="'−' + formatCurrency(annualDishboardCost())"></p>
+            </div>
+            <div class="w-px h-8 bg-white/20"></div>
+            <div class="text-center">
+              <p class="text-brand-200 text-xs mb-0.5">ROI Multiple</p>
+              <p class="font-bold text-white" x-text="roiMultiple() + '×'"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breakdown cards -->
+        <div class="p-8 sm:p-10 space-y-4">
+          <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">How you get there</h3>
+
+          <!-- Card 1: Food Cost Reduction -->
+          <div class="animate-fadeInUp rounded-2xl border border-slate-100 bg-slate-50 p-5 flex gap-4 items-start" style="animation-delay:0.1s">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 3C6.13 3 3 6.13 3 10s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7z" stroke="#059669" stroke-width="1.5"/><path d="M7 10.5l2 2 4-4" stroke="#059669" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-baseline justify-between flex-wrap gap-2">
+                <h4 class="font-bold text-slate-800 text-base">
+                  <span x-text="businessType === 'bar' && !hasFood ? 'Pour Cost Reduction' : businessType === 'bar' ? 'Food &amp; Beverage Cost Reduction' : 'Food Cost Reduction'"></span>
+                </h4>
+                <span class="text-xl font-extrabold text-emerald-700" x-text="formatCurrency(foodCostSavings())"></span>
+              </div>
+              <p class="text-sm text-slate-500 mt-1.5">
+                <span x-text="businessType === 'bar' && !hasFood
+                  ? 'Dishboard customers reduce pour costs by an average of 3 percentage points through accurate tracking, recipe consistency and real-time supplier price visibility.'
+                  : businessType === 'bar'
+                    ? 'Dishboard customers reduce food and beverage costs by an average of 3 percentage points through better invoice control and pour tracking.'
+                    : 'Dishboard customers reduce food costs by an average of 3 percentage points through tighter invoice control and purchasing visibility.'">
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 2: Invoice Mistakes & Transparency -->
+          <div class="animate-fadeInUp rounded-2xl border border-slate-100 bg-slate-50 p-5 flex gap-4 items-start" style="animation-delay:0.2s">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2l1.5 5h5l-4 3 1.5 5L10 12l-4 3 1.5-5-4-3h5L10 2z" stroke="#d97706" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-baseline justify-between flex-wrap gap-2">
+                <h4 class="font-bold text-slate-800 text-base">Cost Leakage Recovery</h4>
+                <span class="text-xl font-extrabold text-amber-700" x-text="formatCurrency(errorSavings())"></span>
+              </div>
+              <p class="text-sm text-slate-500 mt-1.5">When operators move from manual processes to real-time visibility, they regularly surface overcharges, uncredited returns and pricing errors that were previously invisible.</p>
+            </div>
+          </div>
+
+          <!-- Card 3: Cost Radar — conditional -->
+          <!-- SELECTED: counts toward ROI -->
+          <div
+            x-show="hasCostRadar"
+            class="animate-fadeInUp rounded-2xl border border-brand-200 bg-brand-50 p-5 flex gap-4 items-start"
+            style="animation-delay:0.3s"
+          >
+            <div class="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#1e48ef" stroke-width="1.5"/><circle cx="10" cy="10" r="3.5" stroke="#1e48ef" stroke-width="1.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#1e48ef" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-baseline justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold text-slate-800 text-base">Cost Radar Savings</h4>
+                  <span class="text-xs font-semibold bg-brand-600 text-white px-2 py-0.5 rounded-full">Included</span>
+                </div>
+                <span class="text-xl font-extrabold text-brand-700" x-text="formatCurrency(radarSavings())"></span>
+              </div>
+              <p class="text-sm text-slate-500 mt-1.5">Cost Radar catches supplier price increases the moment they happen. Restaurants lose an average of 2% of food and beverage spend to unnoticed price creep every year — now you won't.</p>
+            </div>
+          </div>
+
+          <!-- NOT SELECTED: shown as potential upside, excluded from ROI -->
+          <div
+            x-show="!hasCostRadar"
+            class="animate-fadeInUp rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-5 flex gap-4 items-start"
+            style="animation-delay:0.3s"
+          >
+            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#94a3b8" stroke-width="1.5"/><circle cx="10" cy="10" r="3.5" stroke="#94a3b8" stroke-width="1.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-baseline justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold text-slate-500 text-base">Cost Radar Savings</h4>
+                  <span class="text-xs font-semibold bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Not included</span>
+                </div>
+                <span class="text-xl font-extrabold text-slate-400" x-text="formatCurrency(radarSavings())"></span>
+              </div>
+              <p class="text-sm text-slate-400 mt-1.5">
+                Add Cost Radar to your plan and unlock an additional
+                <strong class="text-slate-600" x-text="formatCurrency(radarSavings())"></strong>/year
+                by catching supplier price increases in real time before they eat into your margins.
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 4: Time Returned -->
+          <div class="animate-fadeInUp rounded-2xl border border-violet-100 bg-violet-50 p-5 flex gap-4 items-start" style="animation-delay:0.4s">
+            <div class="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#7c3aed" stroke-width="1.5"/><path d="M10 6.5v4l2.5 2" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-baseline justify-between flex-wrap gap-2">
+                <h4 class="font-bold text-slate-800 text-base">Time Returned</h4>
+                <span class="text-2xl font-extrabold text-violet-700" x-text="hoursSavedPerMonth() + ' hrs/mo'"></span>
+              </div>
+              <p class="text-sm text-slate-500 mt-1.5">
+                <strong class="text-slate-700" x-text="hoursSavedPerYear() + ' hours a year'"></strong>
+                freed from manual admin —
+                <strong class="text-slate-700" x-text="Math.round(hoursSavedPerYear() / 8) + ' full working days'"></strong>
+                you get back to run your business, not process paperwork.
+              </p>
+            </div>
+          </div>
+
+          <!-- Summary row -->
+          <div class="mt-2 rounded-2xl bg-slate-900 overflow-hidden">
+            <div class="p-4 flex items-center justify-between gap-4 border-b border-slate-700/60">
+              <div>
+                <p class="text-slate-400 text-xs font-medium">Gross Annual Savings</p>
+                <p class="text-white text-xl font-black" x-text="formatCurrency(totalROI())"></p>
+              </div>
+            </div>
+            <div class="px-4 py-3 flex items-center justify-between gap-4 border-b border-slate-700/60">
+              <div class="flex items-center gap-2">
+                <span class="text-slate-400 text-xs font-medium">Dishboard</span>
+                <span class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full" x-text="currentTier().label + ' · ' + formatCurrency(currentTier().prices[country]) + '/mo'"></span>
+              </div>
+              <p class="text-rose-400 text-sm font-bold" x-text="'−' + formatCurrency(annualDishboardCost())"></p>
+            </div>
+            <div class="px-4 py-4 flex items-center justify-between gap-4">
+              <div>
+                <p class="text-slate-400 text-xs font-medium">Net Annual ROI</p>
+                <p class="text-emerald-400 text-2xl font-black" x-text="formatCurrency(netROI())"></p>
+              </div>
+              <div class="text-right">
+                <p class="text-slate-400 text-xs">For every <span x-text="currentCountry().symbolAfter ? '1\u00a0' + currentCountry().symbol : currentCountry().symbol + '1'"></span> spent</p>
+                <p class="text-white text-lg font-bold" x-text="'you save ' + (currentCountry().symbolAfter ? roiMultiple() + '\u00a0' + currentCountry().symbol : currentCountry().symbol + roiMultiple())"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CTA -->
+          <div class="pt-4 text-center">
+            <a
+              href="https://dishboard.io"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-base bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-200 hover:shadow-xl hover:shadow-brand-300 transition-all duration-200 hover:-translate-y-0.5"
+            >
+              Book a Demo to See How
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 4l7 5-7 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <p class="text-slate-400 text-xs mt-3">
+              Free 30-min walkthrough · No commitment required
+            </p>
+          </div>
+
+          <!-- Recalculate -->
+          <div class="text-center pt-2">
+            <button
+              @click="reset()"
+              class="text-xs text-slate-400 hover:text-slate-600 transition-colors underline underline-offset-2"
+            >
+              ← Start over with different numbers
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /card -->
+
+    <!-- Footer -->
+    <p class="text-center text-xs text-slate-400 mt-6">
+      Calculations are estimates based on industry benchmarks. Individual results may vary.
+    </p>
+
+  </div><!-- /x-data -->
+
+  <script>
+    function calculator() {
+      return {
+        step: 1,
+        country: '',
+        businessType: '',
+        selectedTier: '',
+        monthlyRevenue: 0,
+        foodCostPercent: 30,
+        monthlyInvoices: 100,
+        adminHours: 26,
+        displayTotal: 0,
+        // Bar-specific
+        hasFood: true,
+        beverageRevenuePercent: 80,
+        pourCostPercent: 22,
+        // Plan add-ons
+        hasCostRadar: false,
+        planInvoices: 150,
+
+        // ── CONFIG ───────────────────────────────────────────────
+        countries: [
+          {
+            code: 'uk',
+            name: 'United Kingdom',
+            flag: '🇬🇧',
+            currency: 'GBP',
+            symbol: '£',
+            symbolAfter: false,
+            thousandSep: ',',
+            adminRate: 15,
+            revenueMin: 5000,
+            revenueMax: 500000,
+            revenueStep: 1000,
+            radarPrice: 40,
+            invoiceBlockPrice: 20,
+          },
+          {
+            code: 'cz',
+            name: 'Czech Republic',
+            flag: '🇨🇿',
+            currency: 'CZK',
+            symbol: 'Kč',
+            symbolAfter: true,
+            thousandSep: '\u00a0',
+            adminRate: 250,
+            revenueMin: 100000,
+            revenueMax: 10000000,
+            revenueStep: 50000,
+            radarPrice: 5000,
+            invoiceBlockPrice: 500,
+          },
+          {
+            code: 'sk',
+            name: 'Slovakia',
+            flag: '🇸🇰',
+            currency: 'EUR',
+            symbol: '€',
+            symbolAfter: false,
+            thousandSep: '\u00a0',
+            adminRate: 8.5,
+            revenueMin: 2000,
+            revenueMax: 300000,
+            revenueStep: 1000,
+            radarPrice: 40,
+            invoiceBlockPrice: 20,
+          },
+        ],
+
+        businessTypes: [
+          { key: 'fsr',  icon: '🍽️', label: 'Full Service Restaurant', sub: 'Dine-in, table service' },
+          { key: 'qsr',  icon: '🍔', label: 'QSR / Fast Casual',       sub: 'Counter service, takeaway' },
+          { key: 'bar',  icon: '🍸', label: 'Bar / Nightclub',         sub: 'Drinks-led, evening trade' },
+          { key: 'cafe', icon: '☕', label: 'Café / Bakery',            sub: 'Coffee shop, light bites' },
+        ],
+
+        pricingTiers: [
+          {
+            key: 'tier1',
+            label: 'Starter',
+            popular: false,
+            prices: { uk: 70, cz: 1725, sk: 70 },
+            features: [
+              '150 invoices/month',
+              'Invoice digitisation',
+              'Basic cost dashboard',
+              'Email support',
+            ],
+          },
+          {
+            key: 'tier2',
+            label: 'Professional',
+            popular: true,
+            prices: { uk: 115, cz: 2825, sk: 115 },
+            features: [
+              '150 invoices/month',
+              'Everything in Starter',
+              'Price change alerts',
+              'Supplier management',
+              'Priority support',
+            ],
+          },
+          {
+            key: 'tier3',
+            label: 'Premium',
+            popular: false,
+            prices: { uk: 165, cz: 3990, sk: 165 },
+            features: [
+              '150 invoices/month',
+              'Everything in Professional',
+              'Advanced analytics',
+              'POS & accounting integrations',
+              'Dedicated account manager',
+            ],
+          },
+        ],
+
+        // Benchmarks indexed by [country][businessType]
+        benchmarks: {
+          uk:  { fsr: { revenue: 55000, foodCost: 30, invoices: 120 }, qsr: { revenue: 35000, foodCost: 28, invoices: 80  }, bar: { revenue: 30000, foodCost: 20, invoices: 60  }, cafe: { revenue: 20000, foodCost: 25, invoices: 60  } },
+          cz:  { fsr: { revenue: 1200000, foodCost: 30, invoices: 120 }, qsr: { revenue: 800000, foodCost: 28, invoices: 80 }, bar: { revenue: 650000, foodCost: 20, invoices: 60 }, cafe: { revenue: 450000, foodCost: 25, invoices: 60 } },
+          sk:  { fsr: { revenue: 20000, foodCost: 30, invoices: 120 }, qsr: { revenue: 13000, foodCost: 28, invoices: 80  }, bar: { revenue: 11000, foodCost: 20, invoices: 60  }, cafe: { revenue: 7500,  foodCost: 25, invoices: 60  } },
+        },
+
+        // ── HELPERS ──────────────────────────────────────────────
+        currentCountry() {
+          return this.countries.find(c => c.code === this.country) || this.countries[0];
+        },
+        currentBusinessType() {
+          return this.businessTypes.find(b => b.key === this.businessType) || this.businessTypes[0];
+        },
+        currentTier() {
+          return this.pricingTiers.find(t => t.key === this.selectedTier) || this.pricingTiers[0];
+        },
+        benchmark() {
+          if (!this.country || !this.businessType) return { revenue: 0, foodCost: 30, invoices: 100 };
+          return this.benchmarks[this.country][this.businessType];
+        },
+
+        // ── CURRENCY FORMATTING ──────────────────────────────────
+        formatCurrency(val) {
+          const c = this.currentCountry();
+          const rounded = Math.round(val);
+          // Format with thousand separators
+          const parts = rounded.toString().split('.');
+          parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, c.thousandSep);
+          const num = parts.join('.');
+          return c.symbolAfter ? num + '\u00a0' + c.symbol : c.symbol + num;
+        },
+
+        // ── CALCULATIONS ─────────────────────────────────────────
+        annualRevenue() { return this.monthlyRevenue * 12; },
+
+        // Combined food/bev spend — used as basis for food savings and Cost Radar
+        annualFoodBevSpend() {
+          if (this.businessType === 'bar') {
+            const foodSpend = this.hasFood
+              ? this.annualRevenue() * ((100 - this.beverageRevenuePercent) / 100) * (this.foodCostPercent / 100)
+              : 0;
+            const bevSpend = this.annualRevenue() * (this.beverageRevenuePercent / 100) * (this.pourCostPercent / 100);
+            return foodSpend + bevSpend;
+          }
+          return this.annualRevenue() * (this.foodCostPercent / 100);
+        },
+
+        // Tiered savings rate — how many pp reduction is realistic given current food cost level
+        foodSavingsRate() {
+          const fc = this.businessType === 'bar' ? this.pourCostPercent : this.foodCostPercent;
+          if (fc < 28) return 0.01;   // already well-controlled — 1pp saving
+          if (fc < 32) return 0.02;   // industry average — 2pp saving
+          if (fc < 37) return 0.03;   // above average — 3pp saving
+          return 0.04;                // high leakage — 4pp saving
+        },
+
+        // Card 1: Food/pour cost savings — tiered pp reduction applied to actual food/bev spend
+        foodCostSavings() {
+          if (this.businessType === 'bar') {
+            const bevSpend  = this.annualRevenue() * (this.beverageRevenuePercent / 100) * (this.pourCostPercent / 100);
+            const foodSpend = this.hasFood
+              ? this.annualRevenue() * ((100 - this.beverageRevenuePercent) / 100) * (this.foodCostPercent / 100)
+              : 0;
+            return (bevSpend + foodSpend) * this.foodSavingsRate();
+          }
+          return this.annualRevenue() * (this.foodCostPercent / 100) * this.foodSavingsRate();
+        },
+
+        // Card 2: Cost Leakage Recovery — tiered by operator size vs segment benchmark
+        // Smaller operations have fewer controls, more to surface. Floors at 0.24%
+        // (basis: Beverley Hills £1,300 saved on £45k/mo = 0.24% of annual revenue)
+        transparencySavingsRate() {
+          const ratio = this.monthlyRevenue / this.benchmark().revenue;
+          if (ratio < 0.4) return 0.008;   // very lean, minimal controls
+          if (ratio < 0.8) return 0.005;   // below-average controls
+          if (ratio < 2.0) return 0.0035;  // typical operator
+          return 0.0024;                    // larger operator — Beverley Hills baseline
+        },
+        errorSavings() { return this.annualRevenue() * this.transparencySavingsRate(); },
+
+        // Card 3: Cost Radar — 1% of food/bev spend (only active when hasCostRadar)
+        radarSavings() { return this.annualFoodBevSpend() * 0.01; },
+
+        // Card 4: Time saved — informational only, NOT in ROI
+        // Linear: 15 hrs/mo at 50 invoices → 30 hrs/mo at 200 invoices, capped at 30
+        hoursSavedPerMonth() {
+          const hrs = 15 + (Math.min(this.monthlyInvoices, 200) - 50) * (15 / 150);
+          return Math.round(Math.max(15, hrs));
+        },
+        hoursSavedPerYear() { return this.hoursSavedPerMonth() * 12; },
+
+        // Total ROI: food savings + error savings + radar savings (if selected)
+        totalROI() {
+          return this.foodCostSavings()
+               + this.errorSavings()
+               + (this.hasCostRadar ? this.radarSavings() : 0);
+        },
+
+        radarMonthly() {
+          return this.hasCostRadar ? this.currentCountry().radarPrice : 0;
+        },
+        invoiceOverageMonthly() {
+          const blocks = (this.planInvoices - 150) / 50;
+          return blocks * this.currentCountry().invoiceBlockPrice;
+        },
+        totalMonthlyPlan() {
+          if (!this.selectedTier || !this.country) return 0;
+          return this.currentTier().prices[this.country]
+               + this.radarMonthly()
+               + this.invoiceOverageMonthly();
+        },
+        annualDishboardCost() {
+          return this.totalMonthlyPlan() * 12;
+        },
+        netROI()      { return Math.max(0, this.totalROI() - this.annualDishboardCost()); },
+        roiMultiple() {
+          const cost = this.annualDishboardCost();
+          if (!cost) return '∞';
+          return (this.totalROI() / cost).toFixed(1);
+        },
+
+        // Invoice → admin hours: ~18 min/invoice total (research-backed: Lagom 35h/100inv, BHB 15h/60inv)
+        calcAdminHours(invoices) { return Math.max(1, Math.round(invoices * 0.30)); },
+
+        // ── ACTIONS ──────────────────────────────────────────────
+        selectCountry(code) {
+          this.country = code;
+          // Reset business type so benchmarks reload cleanly
+          this.businessType = '';
+        },
+
+        selectBusinessType(key) {
+          this.businessType = key;
+          const b = this.benchmarks[this.country][key];
+          this.monthlyRevenue = b.revenue;
+          this.foodCostPercent = b.foodCost;
+          this.monthlyInvoices = b.invoices;
+          this.adminHours = this.calcAdminHours(b.invoices);
+          // Bar-specific defaults
+          if (key === 'bar') {
+            this.hasFood = true;
+            this.beverageRevenuePercent = 80;
+            this.pourCostPercent = 22;
+          }
+        },
+
+        updateAdminHours() {
+          this.adminHours = this.calcAdminHours(this.monthlyInvoices);
+        },
+
+        clampRevenue() {
+          const c = this.currentCountry();
+          this.monthlyRevenue = Math.min(Math.max(this.monthlyRevenue, c.revenueMin), c.revenueMax);
+        },
+
+        clampInvoices() {
+          this.monthlyInvoices = Math.min(Math.max(this.monthlyInvoices, 10), 300);
+        },
+
+        goToPlan() {
+          // Auto-set invoice slider to the next threshold at or above monthly invoice count
+          const raw = Math.max(150, Math.min(300, this.monthlyInvoices));
+          this.planInvoices = Math.min(300, Math.ceil(raw / 50) * 50);
+          this.step = 4;
+        },
+
+        goToResults() {
+          this.step = 5;
+          this.$nextTick(() => this.animateCounter());
+        },
+
+        animateCounter() {
+          const target = this.netROI();
+          const duration = 1600;
+          const startTime = performance.now();
+          const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+          const tick = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            this.displayTotal = Math.round(easeOut(progress) * target);
+            if (progress < 1) requestAnimationFrame(tick);
+            else this.displayTotal = target;
+          };
+          this.displayTotal = 0;
+          requestAnimationFrame(tick);
+        },
+
+        reset() {
+          this.step = 1;
+          this.country = '';
+          this.businessType = '';
+          this.selectedTier = '';
+          this.monthlyRevenue = 0;
+          this.foodCostPercent = 30;
+          this.monthlyInvoices = 100;
+          this.adminHours = 26;
+          this.displayTotal = 0;
+          this.hasFood = true;
+          this.beverageRevenuePercent = 80;
+          this.pourCostPercent = 22;
+          this.hasCostRadar = false;
+          this.planInvoices = 150;
+        },
+      };
+    }
+  </script>
+</body>
+</html>
