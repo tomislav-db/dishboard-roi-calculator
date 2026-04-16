@@ -699,7 +699,7 @@
                 </div>
                 <span class="text-xl font-extrabold text-brand-700" x-text="formatCurrency(radarSavings())"></span>
               </div>
-              <p class="text-sm text-slate-500 mt-1.5">Cost Radar catches supplier price increases the moment they happen. Restaurants lose an average of 2% of food and beverage spend to unnoticed price creep every year — now you won't.</p>
+              <p class="text-sm text-slate-500 mt-1.5">Supplier prices change constantly — but without real-time detection, most operators don't notice for 6–10 weeks. Cost Radar flags every price movement the moment it appears on an invoice, so you can challenge it, renegotiate, or switch supplier before the loss compounds.</p>
             </div>
           </div>
 
@@ -721,9 +721,7 @@
                 <span class="text-xl font-extrabold text-slate-400" x-text="formatCurrency(radarSavings())"></span>
               </div>
               <p class="text-sm text-slate-400 mt-1.5">
-                Add Cost Radar to your plan and unlock an additional
-                <strong class="text-slate-600" x-text="formatCurrency(radarSavings())"></strong>/year
-                by catching supplier price increases in real time before they eat into your margins.
+                Supplier prices change constantly — but without real-time detection, most operators don't notice for 6–10 weeks. Cost Radar flags every price movement the moment it appears on an invoice, so you can challenge it, renegotiate, or switch supplier before the loss compounds. This is on top of operational savings — even a perfectly-run kitchen is exposed to what suppliers quietly do to your costs. Add Cost Radar to recover an estimated <strong class="text-slate-600" x-text="formatCurrency(radarSavings())"></strong>/year.
               </p>
             </div>
           </div>
@@ -1009,8 +1007,11 @@
         },
         errorSavings() { return this.annualRevenue() * this.transparencySavingsRate(); },
 
-        // Card 3: Cost Radar — 1% of food/bev spend (only active when hasCostRadar)
-        radarSavings() { return this.annualFoodBevSpend() * 0.01; },
+        // Card 3: Cost Radar — 3.5% of food/bev spend (only active when hasCostRadar)
+        // Basis: Beverly Hills £8,000/£178k food spend = 4.5%; using 3.5% is conservative
+        // Mechanism: supplier price increases go undetected 6-10 weeks on average;
+        // Cost Radar catches them on the invoice → ~50-60% get reversed/renegotiated
+        radarSavings() { return this.annualFoodBevSpend() * 0.035; },
 
         // Card 4: Time saved — informational only, NOT in ROI
         // Linear: 15 hrs/mo at 50 invoices → 30 hrs/mo at 200 invoices, capped at 30
