@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "Dishboard ROI Calculator",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.defaultLanguage": "html",
+    "editor.wordWrap": "on",
+    "editor.formatOnSave": false
+  }
+}
