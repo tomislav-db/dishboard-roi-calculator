@@ -437,6 +437,28 @@
           </p>
         </div>
 
+        <!-- Management Style -->
+        <div class="mb-8">
+          <div class="mb-3">
+            <label class="text-sm font-semibold text-slate-700">Management Style</label>
+            <p class="text-xs text-slate-400 mt-0.5">Be realistic — how much time will you spend acting on the data?</p>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <template x-for="level in managementLevels" :key="level.key">
+              <button
+                @click="managementStyle = level.key"
+                class="type-card rounded-2xl border-2 p-4 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-400"
+                :class="managementStyle === level.key
+                  ? 'border-brand-600 bg-brand-50 shadow-md shadow-brand-100'
+                  : 'border-slate-100 bg-slate-50 hover:border-slate-300'"
+              >
+                <div class="font-semibold text-slate-800 text-sm leading-tight mb-1.5" x-text="level.label"></div>
+                <div class="text-xs text-slate-400 leading-snug" x-text="level.sub"></div>
+              </button>
+            </template>
+          </div>
+        </div>
+
         <div class="flex justify-end">
           <button
             @click="goToPlan()"
@@ -828,6 +850,8 @@
         // Plan add-ons
         hasCostRadar: false,
         planInvoices: 150,
+        // Management style
+        managementStyle: '',
 
         // ── CONFIG ───────────────────────────────────────────────
         countries: [
@@ -883,6 +907,12 @@
           { key: 'qsr',  icon: '🍔', label: 'QSR / Fast Casual',       sub: 'Counter service, takeaway' },
           { key: 'bar',  icon: '🍸', label: 'Bar / Nightclub',         sub: 'Drinks-led, evening trade' },
           { key: 'cafe', icon: '☕', label: 'Café / Bakery',            sub: 'Coffee shop, light bites' },
+        ],
+
+        managementLevels: [
+          { key: 'oversight', label: 'Oversight', sub: "I'll check the big picture monthly.",      multiplier: 0.4 },
+          { key: 'active',    label: 'Active',    sub: "I'll fix weekly errors & price spikes.",   multiplier: 0.7 },
+          { key: 'precision', label: 'Precision', sub: "I'll chase every penny & negotiation.",    multiplier: 1.0 },
         ],
 
         pricingTiers: [
@@ -947,6 +977,10 @@
           if (!this.country || !this.businessType) return { revenue: 0, foodCost: 30, invoices: 100 };
           return this.benchmarks[this.country][this.businessType];
         },
+        mgmtMultiplier() {
+          const level = this.managementLevels.find(l => l.key === this.managementStyle);
+          return level ? level.multiplier : 1.0;
+        },
 
         // ── CURRENCY FORMATTING ──────────────────────────────────
         formatCurrency(val) {
@@ -990,9 +1024,9 @@
             const foodSpend = this.hasFood
               ? this.annualRevenue() * ((100 - this.beverageRevenuePercent) / 100) * (this.foodCostPercent / 100)
               : 0;
-            return (bevSpend + foodSpend) * this.foodSavingsRate();
+            return (bevSpend + foodSpend) * this.foodSavingsRate() * this.mgmtMultiplier();
           }
-          return this.annualRevenue() * (this.foodCostPercent / 100) * this.foodSavingsRate();
+          return this.annualRevenue() * (this.foodCostPercent / 100) * this.foodSavingsRate() * this.mgmtMultiplier();
         },
 
         // Card 2: Cost Leakage Recovery — tiered by operator size vs segment benchmark
@@ -1005,13 +1039,13 @@
           if (ratio < 2.0) return 0.0035;  // typical operator
           return 0.0024;                    // larger operator — Beverley Hills baseline
         },
-        errorSavings() { return this.annualRevenue() * this.transparencySavingsRate(); },
+        errorSavings() { return this.annualRevenue() * this.transparencySavingsRate() * this.mgmtMultiplier(); },
 
         // Card 3: Cost Radar — 3.5% of food/bev spend (only active when hasCostRadar)
         // Basis: Beverly Hills £8,000/£178k food spend = 4.5%; using 3.5% is conservative
         // Mechanism: supplier price increases go undetected 6-10 weeks on average;
         // Cost Radar catches them on the invoice → ~50-60% get reversed/renegotiated
-        radarSavings() { return this.annualFoodBevSpend() * 0.035; },
+        radarSavings() { return this.annualFoodBevSpend() * 0.035 * this.mgmtMultiplier(); },
 
         // Card 4: Time saved — informational only, NOT in ROI
         // Linear: 15 hrs/mo at 50 invoices → 30 hrs/mo at 200 invoices, capped at 30
@@ -1133,6 +1167,7 @@
           this.pourCostPercent = 22;
           this.hasCostRadar = false;
           this.planInvoices = 150;
+          this.managementStyle = '';
         },
       };
     }
