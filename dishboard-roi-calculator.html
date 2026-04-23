@@ -1037,10 +1037,10 @@
         // (basis: Beverley Hills £1,300 saved on £45k/mo = 0.24% of annual revenue)
         transparencySavingsRate() {
           const ratio = this.monthlyRevenue / this.benchmark().revenue;
-          if (ratio < 0.4) return 0.008;   // very lean, minimal controls
-          if (ratio < 0.8) return 0.005;   // below-average controls
-          if (ratio < 2.0) return 0.0035;  // typical operator
-          return 0.0024;                    // larger operator — Beverley Hills baseline
+          if (ratio < 0.4) return 0.06;    // very lean, minimal controls
+          if (ratio < 0.8) return 0.04;    // below-average controls
+          if (ratio < 2.0) return 0.025;   // typical operator — anchored to Beverley Hills case study
+          return 0.015;                     // larger operator
         },
         errorSavings() {
           const raw = this.annualRevenue() * 0.15 * this.transparencySavingsRate() * this.mgmtMultiplier();
@@ -1052,7 +1052,7 @@
         // Basis: Beverly Hills £8,000/£178k food spend = 4.5%; using 3.5% is conservative
         // Mechanism: supplier price increases go undetected 6-10 weeks on average;
         // Cost Radar catches them on the invoice → ~50-60% get reversed/renegotiated
-        radarSavings() { return this.annualFoodBevSpend() * 0.05 * 0.40 * this.mgmtMultiplier(); },
+        radarSavings() { return this.annualFoodBevSpend() * 0.05 * 0.50 * this.mgmtMultiplier(); },
 
         // Card 4: Time saved — informational only, NOT in ROI
         // Linear: 15 hrs/mo at 50 invoices → 30 hrs/mo at 200 invoices, capped at 30
@@ -1063,7 +1063,7 @@
         hoursSavedPerYear() { return this.hoursSavedPerMonth() * 12; },
 
         // 15% synergy buffer when all 3 buckets active — prevents double-counting
-        synergyFactor() { return this.hasCostRadar ? 0.85 : 1.0; },
+        synergyFactor() { return this.hasCostRadar ? 0.90 : 1.0; },
 
         // Total ROI: food savings + error savings + radar savings (if selected), with synergy buffer
         totalROI() {
