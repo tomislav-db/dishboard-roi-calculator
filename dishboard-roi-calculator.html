@@ -302,12 +302,12 @@
           </p>
         </div>
 
-        <!-- ── BAR: Do you serve food? ── -->
-        <div x-show="businessType === 'bar'" class="mb-8">
+        <!-- ── BAR / CAFÉ: Do you serve food? ── -->
+        <div x-show="businessType === 'bar' || businessType === 'cafe'" class="mb-8">
           <label class="text-sm font-semibold text-slate-700 block mb-3">Does your venue serve food?</label>
           <div class="flex gap-3">
             <button
-              @click="hasFood = true; beverageRevenuePercent = 80"
+              @click="hasFood = true; beverageRevenuePercent = (businessType === 'cafe' ? 60 : 80)"
               class="flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
               :class="hasFood ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
             >
@@ -318,13 +318,13 @@
               class="flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
               :class="!hasFood ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
             >
-              🍸 Drinks only
+              <span x-text="businessType === 'cafe' ? '☕ Drinks only' : '🍸 Drinks only'"></span>
             </button>
           </div>
         </div>
 
-        <!-- ── BAR: Revenue split (only if has food) ── -->
-        <div x-show="businessType === 'bar' && hasFood" class="mb-8">
+        <!-- ── BAR / CAFÉ: Revenue split (only if has food) ── -->
+        <div x-show="(businessType === 'bar' || businessType === 'cafe') && hasFood" class="mb-8">
           <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-semibold text-slate-700">Revenue Split</label>
             <span class="text-sm font-bold text-slate-900">
@@ -354,13 +354,17 @@
             <span>50% drinks</span>
             <span>100% drinks</span>
           </div>
-          <p class="text-xs text-slate-400 mt-1">Industry benchmark for bars: <span class="font-semibold text-brand-600">80% beverages</span></p>
+          <p class="text-xs text-slate-400 mt-1">
+            Industry benchmark for
+            <span x-text="businessType === 'cafe' ? 'cafés' : 'bars'"></span>:
+            <span class="font-semibold text-brand-600" x-text="businessType === 'cafe' ? '60% drinks' : '80% beverages'"></span>
+          </p>
         </div>
 
-        <!-- ── BAR: Pour Cost % ── -->
-        <div x-show="businessType === 'bar'" class="mb-8">
+        <!-- ── BAR / CAFÉ: Pour / Drink Cost % ── -->
+        <div x-show="businessType === 'bar' || businessType === 'cafe'" class="mb-8">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-semibold text-slate-700">Pour Cost %</label>
+            <label class="text-sm font-semibold text-slate-700" x-text="businessType === 'cafe' ? 'Drink Cost %' : 'Pour Cost %'"></label>
             <span class="text-sm font-bold text-slate-900" x-text="pourCostPercent.toFixed(1) + '%'"></span>
           </div>
           <input
@@ -375,14 +379,18 @@
             <span>5%</span>
             <span>50%</span>
           </div>
-          <p class="text-xs text-slate-400 mt-1">
+          <p class="text-xs text-slate-400 mt-1" x-show="businessType === 'bar'">
             Industry benchmark: <span class="font-semibold text-brand-600">18–24%</span>
             &nbsp;·&nbsp; Losses from over-pouring, spillage &amp; shrinkage
           </p>
+          <p class="text-xs text-slate-400 mt-1" x-show="businessType === 'cafe'">
+            Industry benchmark: <span class="font-semibold text-brand-600">25–32%</span>
+            &nbsp;·&nbsp; Beans, milk, syrups &amp; other drink ingredients
+          </p>
         </div>
 
-        <!-- Food Cost % — hidden for bars with no food, shown for all others -->
-        <div x-show="businessType !== 'bar' || hasFood" class="mb-8">
+        <!-- Food Cost % — hidden for bars/cafés with no food, shown for all others -->
+        <div x-show="(businessType !== 'bar' && businessType !== 'cafe') || hasFood" class="mb-8">
           <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-semibold text-slate-700" x-text="businessType === 'bar' ? 'Food Cost %' : 'Food Cost %'"></label>
             <span class="text-sm font-bold text-slate-900" x-text="foodCostPercent.toFixed(1) + '%'"></span>
@@ -1015,7 +1023,7 @@
 
         // Combined food/bev spend — used as basis for food savings and Cost Radar
         annualFoodBevSpend() {
-          if (this.businessType === 'bar') {
+          if (this.businessType === 'bar' || this.businessType === 'cafe') {
             const foodSpend = this.hasFood
               ? this.annualRevenue() * ((100 - this.beverageRevenuePercent) / 100) * (this.foodCostPercent / 100)
               : 0;
@@ -1027,7 +1035,8 @@
 
         // Tiered savings rate — how many pp reduction is realistic given current food cost level
         foodSavingsRate() {
-          const fc = this.businessType === 'bar' ? this.pourCostPercent : this.foodCostPercent;
+          const useDrinkCost = this.businessType === 'bar' || (this.businessType === 'cafe' && !this.hasFood);
+          const fc = useDrinkCost ? this.pourCostPercent : this.foodCostPercent;
           if (fc < 28) return 0.01;   // already well-controlled — 1pp saving
           if (fc < 32) return 0.02;   // industry average — 2pp saving
           if (fc < 37) return 0.03;   // above average — 3pp saving
@@ -1036,7 +1045,7 @@
 
         // Card 1: Food/pour cost savings — tiered pp reduction applied to actual food/bev spend
         foodCostSavings() {
-          if (this.businessType === 'bar') {
+          if (this.businessType === 'bar' || this.businessType === 'cafe') {
             const bevSpend  = this.annualRevenue() * (this.beverageRevenuePercent / 100) * (this.pourCostPercent / 100);
             const foodSpend = this.hasFood
               ? this.annualRevenue() * ((100 - this.beverageRevenuePercent) / 100) * (this.foodCostPercent / 100)
@@ -1124,11 +1133,16 @@
           this.foodCostPercent = b.foodCost;
           this.monthlyInvoices = b.invoices;
           this.adminHours = this.calcAdminHours(b.invoices);
-          // Bar-specific defaults
+          // Bar / Café defaults
           if (key === 'bar') {
             this.hasFood = true;
             this.beverageRevenuePercent = 80;
             this.pourCostPercent = 22;
+          }
+          if (key === 'cafe') {
+            this.hasFood = true;
+            this.beverageRevenuePercent = 60;
+            this.pourCostPercent = 28;
           }
         },
 
