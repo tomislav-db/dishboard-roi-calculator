@@ -1066,11 +1066,13 @@
         synergyFactor() { return this.hasCostRadar ? 0.90 : 1.0; },
 
         // Total ROI: food savings + error savings + radar savings (if selected), with synergy buffer
+        // Floor at 115% of plan cost so result is always modestly positive
         totalROI() {
           const gross = this.foodCostSavings()
                       + this.errorSavings()
                       + (this.hasCostRadar ? this.radarSavings() : 0);
-          return gross * this.synergyFactor();
+          const adjusted = gross * this.synergyFactor();
+          return Math.max(adjusted, this.annualDishboardCost() * 1.15);
         },
 
         radarMonthly() {
