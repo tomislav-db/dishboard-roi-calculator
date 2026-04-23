@@ -1230,9 +1230,9 @@
 
         // Benchmarks indexed by [country][businessType]
         benchmarks: {
-          uk:  { fsr: { revenue: 55000, foodCost: 30, invoices: 120 }, qsr: { revenue: 35000, foodCost: 28, invoices: 80  }, bar: { revenue: 30000, foodCost: 20, invoices: 60  }, cafe: { revenue: 20000, foodCost: 25, invoices: 60  } },
-          cz:  { fsr: { revenue: 1200000, foodCost: 30, invoices: 120 }, qsr: { revenue: 800000, foodCost: 28, invoices: 80 }, bar: { revenue: 650000, foodCost: 20, invoices: 60 }, cafe: { revenue: 450000, foodCost: 25, invoices: 60 } },
-          sk:  { fsr: { revenue: 20000, foodCost: 30, invoices: 120 }, qsr: { revenue: 13000, foodCost: 28, invoices: 80  }, bar: { revenue: 11000, foodCost: 20, invoices: 60  }, cafe: { revenue: 7500,  foodCost: 25, invoices: 60  } },
+          uk:  { fsr: { revenue: 55000,   foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 35000,  foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 30000,  foodCost: 20, invoices: 60 }, cafe: { revenue: 20000, foodCost: 25, invoices: 60 } },
+          cz:  { fsr: { revenue: 1200000, foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 800000, foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 650000, foodCost: 20, invoices: 60 }, cafe: { revenue: 450000, foodCost: 25, invoices: 60 } },
+          sk:  { fsr: { revenue: 20000,   foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 13000,  foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 11000,  foodCost: 20, invoices: 60 }, cafe: { revenue: 7500,  foodCost: 25, invoices: 60 } },
         },
 
         // ── LOCALISATION ─────────────────────────────────────────
@@ -1430,18 +1430,18 @@
           this.businessType = key;
           const b = this.benchmarks[this.country][key];
           this.monthlyRevenue = b.revenue;
-          this.foodCostPercent = b.foodCost;
+          this.foodCostPercent = b.defaultFoodCost || b.foodCost;
           this.monthlyInvoices = b.invoices;
           this.adminHours = this.calcAdminHours(b.invoices);
           if (key === 'bar') {
             this.hasFood = true;
             this.beverageRevenuePercent = 80;
-            this.pourCostPercent = 22;
+            this.pourCostPercent = 28;
           }
           if (key === 'cafe') {
             this.hasFood = true;
             this.beverageRevenuePercent = 60;
-            this.pourCostPercent = 28;
+            this.pourCostPercent = 32;
           }
         },
 
