@@ -984,6 +984,20 @@
           const level = this.managementLevels.find(l => l.key === this.managementStyle);
           return level ? level.multiplier : 1.0;
         },
+        venueSizeModifier() {
+          const ratio = this.monthlyRevenue / this.benchmark().revenue;
+          if (ratio < 0.6) return 1.1;   // small — more leakage, more to gain
+          if (ratio < 1.5) return 1.0;   // mid — case study territory, no change
+          if (ratio < 3.0) return 0.8;   // large — some controls already exist
+          return 0.65;                    // very large — purchasing team, tight controls
+        },
+        radarRate() {
+          const ratio = this.monthlyRevenue / this.benchmark().revenue;
+          if (ratio < 0.6) return 0.040;  // small — uncontrolled, suppliers take advantage
+          if (ratio < 1.5) return 0.035;  // mid — Beverley Hills case study validated
+          if (ratio < 3.0) return 0.025;  // large — some supplier controls exist
+          return 0.015;                    // very large — dedicated purchasing, tight
+        },
 
         // ── CURRENCY FORMATTING ──────────────────────────────────
         formatCurrency(val) {
@@ -1027,9 +1041,9 @@
             const foodSpend = this.hasFood
               ? this.annualRevenue() * ((100 - this.beverageRevenuePercent) / 100) * (this.foodCostPercent / 100)
               : 0;
-            return (bevSpend + foodSpend) * this.foodSavingsRate() * this.mgmtMultiplier();
+            return (bevSpend + foodSpend) * this.foodSavingsRate() * this.mgmtMultiplier() * this.venueSizeModifier();
           }
-          return this.annualRevenue() * (this.foodCostPercent / 100) * this.foodSavingsRate() * this.mgmtMultiplier();
+          return this.annualRevenue() * (this.foodCostPercent / 100) * this.foodSavingsRate() * this.mgmtMultiplier() * this.venueSizeModifier();
         },
 
         // Card 2: Cost Leakage Recovery — tiered by operator size vs segment benchmark
@@ -1051,7 +1065,7 @@
         // Basis: Beverly Hills £8,000/£178k food spend = 4.5%; using 3.5% is conservative
         // Mechanism: supplier price increases go undetected 6-10 weeks on average;
         // Cost Radar catches them on the invoice → ~50-60% get reversed/renegotiated
-        radarSavings() { return this.annualFoodBevSpend() * 0.035; },
+        radarSavings() { return this.annualFoodBevSpend() * this.radarRate(); },
 
         // Card 4: Time saved — informational only, NOT in ROI
         // Linear: 15 hrs/mo at 50 invoices → 30 hrs/mo at 200 invoices, capped at 30
