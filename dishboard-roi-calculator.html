@@ -1052,7 +1052,7 @@
         // Basis: Beverly Hills £8,000/£178k food spend = 4.5%; using 3.5% is conservative
         // Mechanism: supplier price increases go undetected 6-10 weeks on average;
         // Cost Radar catches them on the invoice → ~50-60% get reversed/renegotiated
-        radarSavings() { return this.annualFoodBevSpend() * 0.05 * 0.50 * this.mgmtMultiplier(); },
+        radarSavings() { return this.annualRevenue() * 0.45 * 0.05 * 0.50 * this.mgmtMultiplier(); },
 
         // Card 4: Time saved — informational only, NOT in ROI
         // Linear: 15 hrs/mo at 50 invoices → 30 hrs/mo at 200 invoices, capped at 30
