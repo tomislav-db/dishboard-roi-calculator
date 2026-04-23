@@ -1370,10 +1370,11 @@
 
         transparencySavingsRate() {
           const ratio = this.monthlyRevenue / this.benchmark().revenue;
-          if (ratio < 0.4) return 0.008;
-          if (ratio < 0.8) return 0.005;
-          if (ratio < 2.0) return 0.0035;
-          return 0.0024;
+          if (ratio < 0.4) return 0.014;  // very small — uncontrolled, lots to surface
+          if (ratio < 0.8) return 0.009;  // below benchmark
+          if (ratio < 1.5) return 0.007;  // typical operator
+          if (ratio < 2.5) return 0.004;  // above typical — conservative
+          return 0.003;                    // large — minimal change vs original
         },
         errorSavings() {
           const raw = this.annualRevenue() * this.transparencySavingsRate();
