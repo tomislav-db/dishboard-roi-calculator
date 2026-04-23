@@ -1037,22 +1037,21 @@
         // (basis: Beverley Hills £1,300 saved on £45k/mo = 0.24% of annual revenue)
         transparencySavingsRate() {
           const ratio = this.monthlyRevenue / this.benchmark().revenue;
-          if (ratio < 0.4) return 0.06;    // very lean, minimal controls
-          if (ratio < 0.8) return 0.04;    // below-average controls
-          if (ratio < 2.0) return 0.025;   // typical operator — anchored to Beverley Hills case study
-          return 0.015;                     // larger operator
+          if (ratio < 0.4) return 0.008;   // very lean, minimal controls
+          if (ratio < 0.8) return 0.005;   // below-average controls
+          if (ratio < 2.0) return 0.0035;  // typical operator — Beverley Hills baseline
+          return 0.0024;                    // larger operator
         },
         errorSavings() {
-          const raw = this.annualRevenue() * 0.15 * this.transparencySavingsRate() * this.mgmtMultiplier();
-          const annualCap = this.currentCountry().bucket2Cap * 12;
-          return Math.min(raw, annualCap);
+          const raw = this.annualRevenue() * this.transparencySavingsRate();
+          return Math.min(raw, this.currentCountry().bucket2Cap * 12);
         },
 
         // Card 3: Cost Radar — 3.5% of food/bev spend (only active when hasCostRadar)
         // Basis: Beverly Hills £8,000/£178k food spend = 4.5%; using 3.5% is conservative
         // Mechanism: supplier price increases go undetected 6-10 weeks on average;
         // Cost Radar catches them on the invoice → ~50-60% get reversed/renegotiated
-        radarSavings() { return this.annualRevenue() * 0.45 * 0.05 * 0.50 * this.mgmtMultiplier(); },
+        radarSavings() { return this.annualFoodBevSpend() * 0.035; },
 
         // Card 4: Time saved — informational only, NOT in ROI
         // Linear: 15 hrs/mo at 50 invoices → 30 hrs/mo at 200 invoices, capped at 30
@@ -1062,17 +1061,13 @@
         },
         hoursSavedPerYear() { return this.hoursSavedPerMonth() * 12; },
 
-        // 15% synergy buffer when all 3 buckets active — prevents double-counting
-        synergyFactor() { return this.hasCostRadar ? 0.90 : 1.0; },
-
-        // Total ROI: food savings + error savings + radar savings (if selected), with synergy buffer
-        // Floor at 115% of plan cost so result is always modestly positive
+        // Total ROI: food savings + error savings + radar savings (if selected)
+        // Floor at 115% of plan cost so tiny venues always show a modest positive return
         totalROI() {
           const gross = this.foodCostSavings()
                       + this.errorSavings()
                       + (this.hasCostRadar ? this.radarSavings() : 0);
-          const adjusted = gross * this.synergyFactor();
-          return Math.max(adjusted, this.annualDishboardCost() * 1.15);
+          return Math.max(gross, this.annualDishboardCost() * 1.15);
         },
 
         radarMonthly() {
