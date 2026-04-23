@@ -136,7 +136,7 @@
     x-cloak
     class="w-full max-w-2xl"
   >
-    <!-- Header -->
+    <!-- Header — always English -->
     <div class="text-center mb-8">
       <div class="inline-flex items-center gap-2 mb-3">
         <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
@@ -173,7 +173,7 @@
           <span
             class="text-xs font-medium hidden sm:block transition-colors duration-300"
             :class="step >= s ? 'text-slate-700' : 'text-slate-400'"
-            x-text="['Country', 'Business', 'Numbers', 'Plan', 'Savings'][s-1]"
+            x-text="stepLabel(s)"
           ></span>
           <template x-if="s < 5">
             <div class="w-6 h-px" :class="step > s ? 'bg-brand-600' : 'bg-slate-200'"></div>
@@ -185,7 +185,7 @@
     <!-- CARD -->
     <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/80 border border-slate-100 overflow-hidden">
 
-      <!-- ==================== STEP 1: COUNTRY ==================== -->
+      <!-- ==================== STEP 1: COUNTRY — always English ==================== -->
       <div x-show="step === 1" class="p-8 sm:p-10">
         <h2 class="text-2xl font-bold text-slate-900 mb-1">Where is your restaurant?</h2>
         <p class="text-slate-500 text-sm mb-8">We'll use local benchmarks and your currency.</p>
@@ -225,10 +225,10 @@
       <div x-show="step === 2" class="p-8 sm:p-10">
         <button @click="step = 1" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-6 transition-colors">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Back
+          <span x-text="t('back')"></span>
         </button>
-        <h2 class="text-2xl font-bold text-slate-900 mb-1">What type of business do you run?</h2>
-        <p class="text-slate-500 text-sm mb-8">We'll pre-fill industry benchmarks for your segment.</p>
+        <h2 class="text-2xl font-bold text-slate-900 mb-1" x-text="t('s2_heading')"></h2>
+        <p class="text-slate-500 text-sm mb-8" x-text="t('s2_sub')"></p>
 
         <div class="grid grid-cols-2 gap-4">
           <template x-for="bt in businessTypes" :key="bt.key">
@@ -240,8 +240,8 @@
                 : 'border-slate-100 bg-slate-50 hover:border-slate-300'"
             >
               <div class="text-3xl mb-3" x-text="bt.icon"></div>
-              <div class="font-semibold text-slate-800 text-sm leading-tight" x-text="bt.label"></div>
-              <div class="text-xs text-slate-400 mt-1" x-text="bt.sub"></div>
+              <div class="font-semibold text-slate-800 text-sm leading-tight" x-text="btLabel(bt.key)"></div>
+              <div class="text-xs text-slate-400 mt-1" x-text="btSub(bt.key)"></div>
             </button>
           </template>
         </div>
@@ -255,7 +255,7 @@
               ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200'
               : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
           >
-            Continue
+            <span x-text="t('continue_btn')"></span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
@@ -265,15 +265,15 @@
       <div x-show="step === 3" class="p-8 sm:p-10">
         <button @click="step = 2" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-6 transition-colors">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Back
+          <span x-text="t('back')"></span>
         </button>
-        <h2 class="text-2xl font-bold text-slate-900 mb-1">Tell us your numbers</h2>
-        <p class="text-slate-500 text-sm mb-8">Industry benchmarks are pre-filled — adjust if you know your actuals.</p>
+        <h2 class="text-2xl font-bold text-slate-900 mb-1" x-text="t('s3_heading')"></h2>
+        <p class="text-slate-500 text-sm mb-8" x-text="t('s3_sub')"></p>
 
         <!-- Monthly Revenue -->
         <div class="mb-8">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-semibold text-slate-700">Monthly Revenue</label>
+            <label class="text-sm font-semibold text-slate-700" x-text="t('lbl_monthly_revenue')"></label>
             <div class="flex items-center gap-1">
               <span class="text-xs font-medium text-slate-500" x-text="currentCountry().symbol"></span>
               <input
@@ -297,40 +297,39 @@
             <span x-text="formatCurrency(currentCountry().revenueMax)"></span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
-            Industry benchmark for <span class="font-medium text-slate-600" x-text="currentBusinessType().label"></span>:
-            <span class="font-semibold text-brand-600" x-text="formatCurrency(benchmark().revenue)"></span>/month
+            <span x-text="t('benchmark_for')"></span>
+            <span class="font-medium text-slate-600 mx-1" x-text="btLabel(businessType)"></span>:
+            <span class="font-semibold text-brand-600" x-text="formatCurrency(benchmark().revenue)"></span><span x-text="t('per_month')"></span>
           </p>
         </div>
 
         <!-- ── BAR / CAFÉ: Do you serve food? ── -->
         <div x-show="businessType === 'bar' || businessType === 'cafe'" class="mb-8">
-          <label class="text-sm font-semibold text-slate-700 block mb-3">Does your venue serve food?</label>
+          <label class="text-sm font-semibold text-slate-700 block mb-3" x-text="t('lbl_food_question')"></label>
           <div class="flex gap-3">
             <button
               @click="hasFood = true; beverageRevenuePercent = (businessType === 'cafe' ? 60 : 80)"
               class="flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
               :class="hasFood ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
-            >
-              🍔 Yes, we serve food
-            </button>
+              x-text="t('btn_yes_food')"
+            ></button>
             <button
               @click="hasFood = false; beverageRevenuePercent = 100"
               class="flex-1 py-3 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
               :class="!hasFood ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
-            >
-              <span x-text="businessType === 'cafe' ? '☕ Drinks only' : '🍸 Drinks only'"></span>
-            </button>
+              x-text="businessType === 'cafe' ? t('btn_drinks_only_cafe') : t('btn_drinks_only_bar')"
+            ></button>
           </div>
         </div>
 
         <!-- ── BAR / CAFÉ: Revenue split (only if has food) ── -->
         <div x-show="(businessType === 'bar' || businessType === 'cafe') && hasFood" class="mb-8">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-semibold text-slate-700">Revenue Split</label>
+            <label class="text-sm font-semibold text-slate-700" x-text="t('lbl_revenue_split')"></label>
             <span class="text-sm font-bold text-slate-900">
-              <span class="text-slate-500">Food</span> <span x-text="(100 - beverageRevenuePercent) + '%'"></span>
+              <span class="text-slate-500" x-text="t('lbl_food')"></span> <span x-text="(100 - beverageRevenuePercent) + '%'"></span>
               &nbsp;/&nbsp;
-              <span class="text-slate-500">Drinks</span> <span x-text="beverageRevenuePercent + '%'"></span>
+              <span class="text-slate-500" x-text="t('lbl_drinks')"></span> <span x-text="beverageRevenuePercent + '%'"></span>
             </span>
           </div>
           <!-- Visual split bar -->
@@ -351,20 +350,20 @@
             class="w-full accent-brand-600"
           />
           <div class="flex justify-between text-xs text-slate-400 mt-1">
-            <span>50% drinks</span>
-            <span>100% drinks</span>
+            <span x-text="t('slider_50_drinks')"></span>
+            <span x-text="t('slider_100_drinks')"></span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
-            Industry benchmark for
-            <span x-text="businessType === 'cafe' ? 'cafés' : 'bars'"></span>:
-            <span class="font-semibold text-brand-600" x-text="businessType === 'cafe' ? '60% drinks' : '80% beverages'"></span>
+            <span x-text="t('benchmark_for')"></span>
+            <span class="mx-1" x-text="businessType === 'cafe' ? t('benchmark_cafe_type') : t('benchmark_bar_type')"></span>:
+            <span class="font-semibold text-brand-600" x-text="businessType === 'cafe' ? t('benchmark_cafe_split') : t('benchmark_bar_split')"></span>
           </p>
         </div>
 
         <!-- ── BAR / CAFÉ: Pour / Drink Cost % ── -->
         <div x-show="businessType === 'bar' || businessType === 'cafe'" class="mb-8">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-semibold text-slate-700" x-text="businessType === 'cafe' ? 'Drink Cost %' : 'Pour Cost %'"></label>
+            <label class="text-sm font-semibold text-slate-700" x-text="businessType === 'cafe' ? t('lbl_drink_cost') : t('lbl_pour_cost')"></label>
             <span class="text-sm font-bold text-slate-900" x-text="pourCostPercent.toFixed(1) + '%'"></span>
           </div>
           <input
@@ -380,19 +379,19 @@
             <span>50%</span>
           </div>
           <p class="text-xs text-slate-400 mt-1" x-show="businessType === 'bar'">
-            Industry benchmark: <span class="font-semibold text-brand-600">18–24%</span>
-            &nbsp;·&nbsp; Losses from over-pouring, spillage &amp; shrinkage
+            <span x-text="t('benchmark_pour')"></span> <span class="font-semibold text-brand-600">18–24%</span>
+            &nbsp;·&nbsp; <span x-text="t('pour_note')"></span>
           </p>
           <p class="text-xs text-slate-400 mt-1" x-show="businessType === 'cafe'">
-            Industry benchmark: <span class="font-semibold text-brand-600">25–32%</span>
-            &nbsp;·&nbsp; Beans, milk, syrups &amp; other drink ingredients
+            <span x-text="t('benchmark_pour')"></span> <span class="font-semibold text-brand-600">25–32%</span>
+            &nbsp;·&nbsp; <span x-text="t('cafe_drink_note')"></span>
           </p>
         </div>
 
         <!-- Food Cost % — hidden for bars/cafés with no food, shown for all others -->
         <div x-show="(businessType !== 'bar' && businessType !== 'cafe') || hasFood" class="mb-8">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-semibold text-slate-700" x-text="businessType === 'bar' ? 'Food Cost %' : 'Food Cost %'"></label>
+            <label class="text-sm font-semibold text-slate-700" x-text="t('lbl_food_cost')"></label>
             <span class="text-sm font-bold text-slate-900" x-text="foodCostPercent.toFixed(1) + '%'"></span>
           </div>
           <input
@@ -408,16 +407,17 @@
             <span>60%</span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
-            Industry benchmark for <span class="font-medium text-slate-600" x-text="currentBusinessType().label"></span>:
+            <span x-text="t('benchmark_for')"></span>
+            <span class="font-medium text-slate-600 mx-1" x-text="btLabel(businessType)"></span>:
             <span class="font-semibold text-brand-600" x-text="benchmark().foodCost + '%'"></span>
-            <template x-if="businessType === 'bar'"><span class="text-slate-400"> (food portion only)</span></template>
+            <template x-if="businessType === 'bar'"><span class="text-slate-400" x-text="' ' + t('food_cost_bar_note')"></span></template>
           </p>
         </div>
 
         <!-- Monthly Invoices -->
         <div class="mb-6">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-semibold text-slate-700">Supplier Invoices per Month</label>
+            <label class="text-sm font-semibold text-slate-700" x-text="t('lbl_invoices')"></label>
             <input
               type="number"
               x-model.number="monthlyInvoices"
@@ -440,16 +440,17 @@
             <span>300</span>
           </div>
           <p class="text-xs text-slate-400 mt-2">
-            Industry benchmark for <span class="font-medium text-slate-600" x-text="currentBusinessType().label"></span>:
-            <span class="font-semibold text-brand-600" x-text="benchmark().invoices + ' invoices/month'"></span>
+            <span x-text="t('benchmark_for')"></span>
+            <span class="font-medium text-slate-600 mx-1" x-text="btLabel(businessType)"></span>:
+            <span class="font-semibold text-brand-600" x-text="benchmark().invoices + ' ' + t('invoices_per_month')"></span>
           </p>
         </div>
 
         <!-- Management Style -->
         <div class="mb-8">
           <div class="mb-3">
-            <label class="text-sm font-semibold text-slate-700">Management Style</label>
-            <p class="text-xs text-slate-400 mt-0.5">How would you describe your approach to cost management?</p>
+            <label class="text-sm font-semibold text-slate-700" x-text="t('lbl_mgmt')"></label>
+            <p class="text-xs text-slate-400 mt-0.5" x-text="t('mgmt_sub')"></p>
           </div>
           <div class="grid grid-cols-3 gap-3">
             <template x-for="level in managementLevels" :key="level.key">
@@ -460,8 +461,8 @@
                   ? 'border-brand-600 bg-brand-50 shadow-md shadow-brand-100'
                   : 'border-slate-100 bg-slate-50 hover:border-slate-300'"
               >
-                <div class="font-semibold text-slate-800 text-sm leading-tight mb-1.5" x-text="level.label"></div>
-                <div class="text-xs text-slate-400 leading-snug" x-text="level.sub"></div>
+                <div class="font-semibold text-slate-800 text-sm leading-tight mb-1.5" x-text="mlLabel(level.key)"></div>
+                <div class="text-xs text-slate-400 leading-snug" x-text="mlSub(level.key)"></div>
               </button>
             </template>
           </div>
@@ -472,7 +473,7 @@
             @click="goToPlan()"
             class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200 transition-all duration-200"
           >
-            Continue
+            <span x-text="t('continue_btn')"></span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
@@ -482,11 +483,10 @@
       <div x-show="step === 4" class="p-8 sm:p-10">
         <button @click="step = 3" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-6 transition-colors">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Back
+          <span x-text="t('back')"></span>
         </button>
-        <h2 class="text-2xl font-bold text-slate-900 mb-1">Choose your Dishboard plan</h2>
-        <p class="text-slate-500 text-sm mb-2">All plans include <strong class="text-slate-700">150 invoices/month</strong>. We'll subtract the annual cost from your savings.</p>
-
+        <h2 class="text-2xl font-bold text-slate-900 mb-1" x-text="t('s4_heading')"></h2>
+        <p class="text-slate-500 text-sm mb-2" x-html="t('s4_sub')"></p>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <template x-for="tier in pricingTiers" :key="tier.key">
@@ -497,17 +497,16 @@
                 ? 'border-brand-600 bg-brand-50 shadow-md shadow-brand-100'
                 : 'border-slate-100 bg-slate-50 hover:border-slate-300'"
             >
-
               <p class="text-xs font-semibold uppercase tracking-wide mb-3"
                 :class="selectedTier === tier.key ? 'text-brand-600' : 'text-slate-400'"
-                x-text="tier.label + ' Plan'"></p>
+                x-text="tier.label + ' ' + t('lbl_plan_suffix')"></p>
 
               <!-- Price -->
               <div class="mb-1">
                 <span class="text-2xl font-extrabold text-slate-900" x-text="formatCurrency(tier.prices[country])"></span>
-                <span class="text-sm text-slate-400">/mo</span>
+                <span class="text-sm text-slate-400" x-text="t('per_mo')"></span>
               </div>
-              <p class="text-xs text-slate-400" x-text="formatCurrency(tier.prices[country] * 12) + '/year'"></p>
+              <p class="text-xs text-slate-400" x-text="formatCurrency(tier.prices[country] * 12) + t('per_year')"></p>
 
               <!-- Selected indicator -->
               <div
@@ -524,13 +523,13 @@
         <div class="mt-8 mb-6">
           <div class="flex items-start justify-between gap-4 mb-3">
             <div>
-              <p class="text-sm font-semibold text-slate-700">Cost Radar</p>
-              <p class="text-xs text-slate-400 mt-0.5">Automatic price-change detection across all your suppliers — get alerted the moment a price creeps up.</p>
+              <p class="text-sm font-semibold text-slate-700" x-text="t('radar_name')"></p>
+              <p class="text-xs text-slate-400 mt-0.5" x-text="t('radar_desc')"></p>
             </div>
             <span
               class="shrink-0 text-xs font-bold px-2 py-1 rounded-lg"
               :class="hasCostRadar ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500'"
-              x-text="hasCostRadar ? '+' + formatCurrency(currentCountry().radarPrice) + '/mo' : 'Optional'"
+              x-text="hasCostRadar ? '+' + formatCurrency(currentCountry().radarPrice) + t('per_mo') : t('radar_optional')"
             ></span>
           </div>
           <div class="flex gap-3">
@@ -538,31 +537,28 @@
               @click="hasCostRadar = true"
               class="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
               :class="hasCostRadar ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
-            >
-              ✓ Yes, add Cost Radar
-            </button>
+              x-text="t('btn_add_radar')"
+            ></button>
             <button
               @click="hasCostRadar = false"
               class="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
               :class="!hasCostRadar ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
-            >
-              Not now
-            </button>
+              x-text="t('btn_no_radar')"
+            ></button>
           </div>
         </div>
 
         <!-- ── Invoice Volume ── -->
         <div class="mb-8">
           <div class="flex items-center justify-between mb-2">
-            <label class="text-sm font-semibold text-slate-700">Invoice Volume</label>
+            <label class="text-sm font-semibold text-slate-700" x-text="t('lbl_invoice_vol')"></label>
             <span class="text-sm font-bold text-slate-900">
               <span x-text="planInvoices"></span>
-              <span class="text-slate-400 font-normal">/month</span>
+              <span class="text-slate-400 font-normal" x-text="t('per_month')"></span>
               <span
                 x-show="planInvoices > 150"
                 class="ml-1 text-xs font-bold text-amber-600"
-                x-text="'+' + formatCurrency(invoiceOverageMonthly()) + '/mo'"
-              ></span>
+                x-text="'+' + formatCurrency(invoiceOverageMonthly()) + t('per_mo')"></span>
             </span>
           </div>
           <input
@@ -580,13 +576,7 @@
             <span :class="planInvoices === 250 ? 'text-brand-600 font-semibold' : 'text-slate-400'">250</span>
             <span :class="planInvoices === 300 ? 'text-brand-600 font-semibold' : 'text-slate-400'">300</span>
           </div>
-          <p class="text-xs text-slate-400 mt-1">
-            150 included in all plans
-            <span x-show="planInvoices > 150">
-              · <span x-text="(planInvoices - 150) / 50"></span> extra block<span x-show="(planInvoices - 150) / 50 > 1">s</span>
-              at <span x-text="formatCurrency(currentCountry().invoiceBlockPrice)"></span>/50 invoices
-            </span>
-          </p>
+          <p class="text-xs text-slate-400 mt-1" x-text="invoiceNote()"></p>
         </div>
 
         <!-- ── Dynamic total strip ── -->
@@ -594,26 +584,26 @@
           <div class="px-4 py-3 space-y-1.5">
             <!-- Tier base -->
             <div class="flex items-center justify-between text-sm">
-              <span class="text-slate-600" x-text="currentTier().label + ' plan'"></span>
-              <span class="font-semibold text-slate-800" x-text="formatCurrency(currentTier().prices[country]) + '/mo'"></span>
+              <span class="text-slate-600" x-text="currentTier().label + ' ' + t('lbl_plan_suffix')"></span>
+              <span class="font-semibold text-slate-800" x-text="formatCurrency(currentTier().prices[country]) + t('per_mo')"></span>
             </div>
             <!-- Radar add-on -->
             <div x-show="hasCostRadar" class="flex items-center justify-between text-sm">
               <span class="text-slate-500">+ Cost Radar</span>
-              <span class="font-semibold text-slate-700" x-text="'+' + formatCurrency(currentCountry().radarPrice) + '/mo'"></span>
+              <span class="font-semibold text-slate-700" x-text="'+' + formatCurrency(currentCountry().radarPrice) + t('per_mo')"></span>
             </div>
             <!-- Invoice overage -->
             <div x-show="planInvoices > 150" class="flex items-center justify-between text-sm">
-              <span class="text-slate-500" x-text="'+ ' + planInvoices + ' invoices'"></span>
-              <span class="font-semibold text-slate-700" x-text="'+' + formatCurrency(invoiceOverageMonthly()) + '/mo'"></span>
+              <span class="text-slate-500" x-text="'+ ' + planInvoices + ' ' + t('invoices_per_month')"></span>
+              <span class="font-semibold text-slate-700" x-text="'+' + formatCurrency(invoiceOverageMonthly()) + t('per_mo')"></span>
             </div>
           </div>
           <!-- Total -->
           <div class="px-4 py-3 border-t border-brand-100 bg-white/60 flex items-center justify-between">
-            <span class="text-sm font-bold text-slate-800">Total</span>
+            <span class="text-sm font-bold text-slate-800" x-text="t('lbl_total')"></span>
             <div class="text-right">
-              <span class="text-lg font-extrabold text-brand-700" x-text="formatCurrency(totalMonthlyPlan()) + '/mo'"></span>
-              <span class="text-xs text-slate-400 ml-2" x-text="formatCurrency(annualDishboardCost()) + '/year'"></span>
+              <span class="text-lg font-extrabold text-brand-700" x-text="formatCurrency(totalMonthlyPlan()) + t('per_mo')"></span>
+              <span class="text-xs text-slate-400 ml-2" x-text="formatCurrency(annualDishboardCost()) + t('per_year')"></span>
             </div>
           </div>
         </div>
@@ -627,7 +617,7 @@
               ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200'
               : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
           >
-            Show My Savings
+            <span x-text="t('btn_show_savings')"></span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         </div>
@@ -640,31 +630,33 @@
         <div class="px-8 sm:px-10 pt-6">
           <button @click="step = 4" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            Back to plan
+            <span x-text="t('back_to_plan')"></span>
           </button>
         </div>
 
         <!-- Hero ROI section -->
         <div class="roi-hero p-8 sm:p-10 text-center text-white">
-          <p class="text-brand-100 text-sm font-medium uppercase tracking-widest mb-2">Net Annual Return with Dishboard</p>
+          <p class="text-brand-100 text-sm font-medium uppercase tracking-widest mb-2" x-text="t('hero_label')"></p>
           <div class="text-5xl sm:text-6xl font-black tracking-tight mb-2" x-text="formatCurrency(displayTotal)"></div>
-          <p class="text-brand-100 text-sm mb-4">Based on <span class="font-semibold text-white" x-text="currentCountry().name + ' · ' + currentBusinessType().label"></span>
-            <span x-show="!hasCostRadar" class="block text-brand-200 text-xs mt-1">+ <span x-text="formatCurrency(radarSavings())"></span> more available with Cost Radar</span>
+          <p class="text-brand-100 text-sm mb-4">
+            <span x-text="t('hero_based_on')"></span>
+            <span class="font-semibold text-white" x-text="' ' + currentCountry().name + ' · ' + btLabel(businessType)"></span>
+            <span x-show="!hasCostRadar" class="block text-brand-200 text-xs mt-1" x-text="heroMoreRadar()"></span>
           </p>
           <!-- Gross / cost split -->
           <div class="inline-flex items-center gap-4 bg-white/10 rounded-2xl px-5 py-3 text-sm">
             <div class="text-center">
-              <p class="text-brand-200 text-xs mb-0.5">Gross Savings</p>
+              <p class="text-brand-200 text-xs mb-0.5" x-text="t('lbl_gross_savings')"></p>
               <p class="font-bold text-white" x-text="formatCurrency(totalROI())"></p>
             </div>
             <div class="w-px h-8 bg-white/20"></div>
             <div class="text-center">
-              <p class="text-brand-200 text-xs mb-0.5">Dishboard Cost</p>
+              <p class="text-brand-200 text-xs mb-0.5" x-text="t('lbl_db_cost')"></p>
               <p class="font-bold text-rose-300" x-text="'−' + formatCurrency(annualDishboardCost())"></p>
             </div>
             <div class="w-px h-8 bg-white/20"></div>
             <div class="text-center">
-              <p class="text-brand-200 text-xs mb-0.5">ROI Multiple</p>
+              <p class="text-brand-200 text-xs mb-0.5" x-text="t('lbl_roi_multiple')"></p>
               <p class="font-bold text-white" x-text="roiMultiple() + '×'"></p>
             </div>
           </div>
@@ -672,7 +664,7 @@
 
         <!-- Breakdown cards -->
         <div class="p-8 sm:p-10 space-y-4">
-          <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">How you get there</h3>
+          <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4" x-text="t('how_you_get_there')"></h3>
 
           <!-- Card 1: Food Cost Reduction -->
           <div class="animate-fadeInUp rounded-2xl border border-slate-100 bg-slate-50 p-5 flex gap-4 items-start" style="animation-delay:0.1s">
@@ -681,19 +673,10 @@
             </div>
             <div class="flex-1">
               <div class="flex items-baseline justify-between flex-wrap gap-2">
-                <h4 class="font-bold text-slate-800 text-base">
-                  <span x-text="businessType === 'bar' && !hasFood ? 'Pour Cost Reduction' : businessType === 'bar' ? 'Food &amp; Beverage Cost Reduction' : 'Food Cost Reduction'"></span>
-                </h4>
+                <h4 class="font-bold text-slate-800 text-base" x-text="card1Title()"></h4>
                 <span class="text-xl font-extrabold text-emerald-700" x-text="formatCurrency(foodCostSavings())"></span>
               </div>
-              <p class="text-sm text-slate-500 mt-1.5">
-                <span x-text="businessType === 'bar' && !hasFood
-                  ? 'Dishboard customers reduce pour costs by an average of 3 percentage points through accurate tracking, recipe consistency and real-time supplier price visibility.'
-                  : businessType === 'bar'
-                    ? 'Dishboard customers reduce food and beverage costs by an average of 3 percentage points through better invoice control and pour tracking.'
-                    : 'Dishboard customers reduce food costs by an average of 3 percentage points through tighter invoice control and purchasing visibility.'">
-                </span>
-              </p>
+              <p class="text-sm text-slate-500 mt-1.5" x-text="card1Desc()"></p>
             </div>
           </div>
 
@@ -704,15 +687,14 @@
             </div>
             <div class="flex-1">
               <div class="flex items-baseline justify-between flex-wrap gap-2">
-                <h4 class="font-bold text-slate-800 text-base">Cost Leakage Recovery</h4>
+                <h4 class="font-bold text-slate-800 text-base" x-text="t('card2_title')"></h4>
                 <span class="text-xl font-extrabold text-amber-700" x-text="formatCurrency(errorSavings())"></span>
               </div>
-              <p class="text-sm text-slate-500 mt-1.5">When operators move from manual processes to real-time visibility, they regularly surface overcharges, uncredited returns and pricing errors that were previously invisible.</p>
+              <p class="text-sm text-slate-500 mt-1.5" x-text="t('card2_desc')"></p>
             </div>
           </div>
 
-          <!-- Card 3: Cost Radar — conditional -->
-          <!-- SELECTED: counts toward ROI -->
+          <!-- Card 3: Cost Radar — selected -->
           <div
             x-show="hasCostRadar"
             class="animate-fadeInUp rounded-2xl border border-brand-200 bg-brand-50 p-5 flex gap-4 items-start"
@@ -724,16 +706,16 @@
             <div class="flex-1">
               <div class="flex items-baseline justify-between flex-wrap gap-2">
                 <div class="flex items-center gap-2">
-                  <h4 class="font-bold text-slate-800 text-base">Cost Radar Savings</h4>
-                  <span class="text-xs font-semibold bg-brand-600 text-white px-2 py-0.5 rounded-full">Included</span>
+                  <h4 class="font-bold text-slate-800 text-base" x-text="t('card3_title')"></h4>
+                  <span class="text-xs font-semibold bg-brand-600 text-white px-2 py-0.5 rounded-full" x-text="t('card3_badge_in')"></span>
                 </div>
                 <span class="text-xl font-extrabold text-brand-700" x-text="formatCurrency(radarSavings())"></span>
               </div>
-              <p class="text-sm text-slate-500 mt-1.5">Supplier prices change constantly — but without real-time detection, most operators don't notice for 6–10 weeks. Cost Radar flags every price movement the moment it appears on an invoice, so you can challenge it, renegotiate, or switch supplier before the loss compounds.</p>
+              <p class="text-sm text-slate-500 mt-1.5" x-text="t('card3_desc_in')"></p>
             </div>
           </div>
 
-          <!-- NOT SELECTED: shown as potential upside, excluded from ROI -->
+          <!-- Card 3: Cost Radar — not selected -->
           <div
             x-show="!hasCostRadar"
             class="animate-fadeInUp rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-5 flex gap-4 items-start"
@@ -745,13 +727,13 @@
             <div class="flex-1">
               <div class="flex items-baseline justify-between flex-wrap gap-2">
                 <div class="flex items-center gap-2">
-                  <h4 class="font-bold text-slate-500 text-base">Cost Radar Savings</h4>
-                  <span class="text-xs font-semibold bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full">Not included</span>
+                  <h4 class="font-bold text-slate-500 text-base" x-text="t('card3_title')"></h4>
+                  <span class="text-xs font-semibold bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full" x-text="t('card3_badge_out')"></span>
                 </div>
                 <span class="text-xl font-extrabold text-slate-400" x-text="formatCurrency(radarSavings())"></span>
               </div>
               <p class="text-sm text-slate-400 mt-1.5">
-                Supplier prices change constantly — but without real-time detection, most operators don't notice for 6–10 weeks. Cost Radar flags every price movement the moment it appears on an invoice, so you can challenge it, renegotiate, or switch supplier before the loss compounds. This is on top of operational savings — even a perfectly-run kitchen is exposed to what suppliers quietly do to your costs. Add Cost Radar to recover an estimated <strong class="text-slate-600" x-text="formatCurrency(radarSavings())"></strong>/year.
+                <span x-text="t('card3_not_pre')"></span><strong class="text-slate-600" x-text="formatCurrency(radarSavings())"></strong><span x-text="t('card3_not_post')"></span>
               </p>
             </div>
           </div>
@@ -763,14 +745,14 @@
             </div>
             <div class="flex-1">
               <div class="flex items-baseline justify-between flex-wrap gap-2">
-                <h4 class="font-bold text-slate-800 text-base">Time Returned</h4>
-                <span class="text-2xl font-extrabold text-violet-700" x-text="hoursSavedPerMonth() + ' hrs/mo'"></span>
+                <h4 class="font-bold text-slate-800 text-base" x-text="t('card4_title')"></h4>
+                <span class="text-2xl font-extrabold text-violet-700" x-text="hoursSavedPerMonth() + t('card4_hrs_mo_suffix')"></span>
               </div>
               <p class="text-sm text-slate-500 mt-1.5">
-                <strong class="text-slate-700" x-text="hoursSavedPerYear() + ' hours a year'"></strong>
-                freed from manual admin —
-                <strong class="text-slate-700" x-text="Math.round(hoursSavedPerYear() / 8) + ' full working days'"></strong>
-                you get back to run your business, not process paperwork.
+                <strong class="text-slate-700" x-text="hoursSavedPerYear() + t('card4_hours_year')"></strong>
+                <span x-text="' ' + t('card4_freed') + ' '"></span>
+                <strong class="text-slate-700" x-text="Math.round(hoursSavedPerYear() / 8) + ' ' + t('card4_days')"></strong>
+                <span x-text="' ' + t('card4_days_post')"></span>
               </p>
             </div>
           </div>
@@ -779,25 +761,25 @@
           <div class="mt-2 rounded-2xl bg-slate-900 overflow-hidden">
             <div class="p-4 flex items-center justify-between gap-4 border-b border-slate-700/60">
               <div>
-                <p class="text-slate-400 text-xs font-medium">Gross Annual Savings</p>
+                <p class="text-slate-400 text-xs font-medium" x-text="t('summary_gross')"></p>
                 <p class="text-white text-xl font-black" x-text="formatCurrency(totalROI())"></p>
               </div>
             </div>
             <div class="px-4 py-3 flex items-center justify-between gap-4 border-b border-slate-700/60">
               <div class="flex items-center gap-2">
-                <span class="text-slate-400 text-xs font-medium">Dishboard</span>
-                <span class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full" x-text="currentTier().label + ' · ' + formatCurrency(currentTier().prices[country]) + '/mo'"></span>
+                <span class="text-slate-400 text-xs font-medium" x-text="t('summary_db')"></span>
+                <span class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full" x-text="currentTier().label + ' · ' + formatCurrency(currentTier().prices[country]) + t('per_mo')"></span>
               </div>
               <p class="text-rose-400 text-sm font-bold" x-text="'−' + formatCurrency(annualDishboardCost())"></p>
             </div>
             <div class="px-4 py-4 flex items-center justify-between gap-4">
               <div>
-                <p class="text-slate-400 text-xs font-medium">Net Annual ROI</p>
+                <p class="text-slate-400 text-xs font-medium" x-text="t('summary_net')"></p>
                 <p class="text-emerald-400 text-2xl font-black" x-text="formatCurrency(netROI())"></p>
               </div>
               <div class="text-right">
-                <p class="text-slate-400 text-xs">For every <span x-text="currentCountry().symbolAfter ? '1\u00a0' + currentCountry().symbol : currentCountry().symbol + '1'"></span> spent</p>
-                <p class="text-white text-lg font-bold" x-text="'you save ' + (currentCountry().symbolAfter ? roiMultiple() + '\u00a0' + currentCountry().symbol : currentCountry().symbol + roiMultiple())"></p>
+                <p class="text-slate-400 text-xs" x-text="roiForEvery()"></p>
+                <p class="text-white text-lg font-bold" x-text="roiYouSave()"></p>
               </div>
             </div>
           </div>
@@ -810,12 +792,10 @@
               rel="noopener noreferrer"
               class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-base bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-200 hover:shadow-xl hover:shadow-brand-300 transition-all duration-200 hover:-translate-y-0.5"
             >
-              Book a Demo to See How
+              <span x-text="t('cta_btn')"></span>
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M7 4l7 5-7 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <p class="text-slate-400 text-xs mt-3">
-              Free 30-min walkthrough · No commitment required
-            </p>
+            <p class="text-slate-400 text-xs mt-3" x-text="t('cta_sub')"></p>
           </div>
 
           <!-- Recalculate -->
@@ -823,9 +803,8 @@
             <button
               @click="reset()"
               class="text-xs text-slate-400 hover:text-slate-600 transition-colors underline underline-offset-2"
-            >
-              ← Start over with different numbers
-            </button>
+              x-text="t('start_over')"
+            ></button>
           </div>
         </div>
       </div>
@@ -833,9 +812,7 @@
     </div><!-- /card -->
 
     <!-- Footer -->
-    <p class="text-center text-xs text-slate-400 mt-6">
-      Calculations are estimates based on industry benchmarks. Individual results may vary.
-    </p>
+    <p class="text-center text-xs text-slate-400 mt-6" x-text="t('footer')"></p>
 
   </div><!-- /x-data -->
 
@@ -886,7 +863,7 @@
             currency: 'CZK',
             symbol: 'Kč',
             symbolAfter: true,
-            thousandSep: '\u00a0',
+            thousandSep: ' ',
             adminRate: 250,
             revenueMin: 100000,
             revenueMax: 10000000,
@@ -902,7 +879,7 @@
             currency: 'EUR',
             symbol: '€',
             symbolAfter: false,
-            thousandSep: '\u00a0',
+            thousandSep: ' ',
             adminRate: 8.5,
             revenueMin: 2000,
             revenueMax: 300000,
@@ -914,17 +891,321 @@
         ],
 
         businessTypes: [
-          { key: 'fsr',  icon: '🍽️', label: 'Full Service Restaurant', sub: 'Dine-in, table service' },
-          { key: 'qsr',  icon: '🍔', label: 'QSR / Fast Casual',       sub: 'Counter service, takeaway' },
-          { key: 'bar',  icon: '🍸', label: 'Bar / Nightclub',         sub: 'Drinks-led, evening trade' },
-          { key: 'cafe', icon: '☕', label: 'Café / Bakery',            sub: 'Coffee shop, light bites' },
+          { key: 'fsr',  icon: '🍽️' },
+          { key: 'qsr',  icon: '🍔' },
+          { key: 'bar',  icon: '🍸' },
+          { key: 'cafe', icon: '☕' },
         ],
 
         managementLevels: [
-          { key: 'oversight', label: 'Oversight', sub: "I'll check the big picture monthly.",      multiplier: 0.4 },
-          { key: 'active',    label: 'Active',    sub: "I'll fix weekly errors & price spikes.",   multiplier: 0.6 },
-          { key: 'precision', label: 'Precision', sub: "I'll chase every penny & negotiation.",    multiplier: 0.8 },
+          { key: 'oversight', multiplier: 0.4 },
+          { key: 'active',    multiplier: 0.6 },
+          { key: 'precision', multiplier: 0.8 },
         ],
+
+        // ── TRANSLATIONS ─────────────────────────────────────────
+        translations: {
+          en: {
+            step1: 'Country', step2: 'Business', step3: 'Numbers', step4: 'Plan', step5: 'Savings',
+            back: 'Back',
+            continue_btn: 'Continue',
+            // Step 2
+            s2_heading: 'What type of business do you run?',
+            s2_sub: "We'll pre-fill industry benchmarks for your segment.",
+            bt_fsr_label: 'Full Service Restaurant', bt_fsr_sub: 'Dine-in, table service',
+            bt_qsr_label: 'QSR / Fast Casual',       bt_qsr_sub: 'Counter service, takeaway',
+            bt_bar_label: 'Bar / Nightclub',          bt_bar_sub: 'Drinks-led, evening trade',
+            bt_cafe_label: 'Café / Bakery',           bt_cafe_sub: 'Coffee shop, light bites',
+            // Step 3
+            s3_heading: 'Tell us your numbers',
+            s3_sub: "Industry benchmarks are pre-filled — adjust if you know your actuals.",
+            lbl_monthly_revenue: 'Monthly Revenue',
+            lbl_food_question: 'Does your venue serve food?',
+            btn_yes_food: '🍔 Yes, we serve food',
+            btn_drinks_only_cafe: '☕ Drinks only',
+            btn_drinks_only_bar: '🍸 Drinks only',
+            lbl_revenue_split: 'Revenue Split',
+            lbl_food: 'Food',
+            lbl_drinks: 'Drinks',
+            slider_50_drinks: '50% drinks',
+            slider_100_drinks: '100% drinks',
+            benchmark_cafe_split: '60% drinks',
+            benchmark_bar_split: '80% beverages',
+            lbl_drink_cost: 'Drink Cost %',
+            lbl_pour_cost: 'Pour Cost %',
+            benchmark_pour: 'Industry benchmark:',
+            pour_note: 'Losses from over-pouring, spillage & shrinkage',
+            cafe_drink_note: 'Beans, milk, syrups & other drink ingredients',
+            lbl_food_cost: 'Food Cost %',
+            food_cost_bar_note: '(food portion only)',
+            lbl_invoices: 'Supplier Invoices per Month',
+            invoices_per_month: 'invoices/month',
+            per_month: '/month',
+            benchmark_for: 'Industry benchmark for',
+            benchmark_cafe_type: 'cafés',
+            benchmark_bar_type: 'bars',
+            lbl_mgmt: 'Management Style',
+            mgmt_sub: 'How would you describe your approach to cost management?',
+            ml_oversight_label: 'Oversight',  ml_oversight_sub: "I'll check the big picture monthly.",
+            ml_active_label: 'Active',        ml_active_sub: "I'll fix weekly errors & price spikes.",
+            ml_precision_label: 'Precision',  ml_precision_sub: "I'll chase every penny & negotiation.",
+            // Step 4
+            s4_heading: 'Choose your Dishboard plan',
+            s4_sub: 'All plans include <strong class="text-slate-700">150 invoices/month</strong>. We\'ll subtract the annual cost from your savings.',
+            lbl_plan_suffix: 'Plan',
+            per_mo: '/mo',
+            per_year: '/year',
+            radar_name: 'Cost Radar',
+            radar_desc: 'Automatic price-change detection across all your suppliers — get alerted the moment a price creeps up.',
+            radar_optional: 'Optional',
+            btn_add_radar: '✓ Yes, add Cost Radar',
+            btn_no_radar: 'Not now',
+            lbl_invoice_vol: 'Invoice Volume',
+            invoices_included: '150 included in all plans',
+            invoice_extra_block: 'extra block',
+            invoice_extra_blocks: 'extra blocks',
+            invoice_at: 'at',
+            invoice_per_50: '/50 invoices',
+            lbl_total: 'Total',
+            btn_show_savings: 'Show My Savings',
+            // Step 5
+            back_to_plan: 'Back to plan',
+            hero_label: 'Net Annual Return with Dishboard',
+            hero_based_on: 'Based on',
+            hero_more_post: ' more available with Cost Radar',
+            lbl_gross_savings: 'Gross Savings',
+            lbl_db_cost: 'Dishboard Cost',
+            lbl_roi_multiple: 'ROI Multiple',
+            how_you_get_there: 'How you get there',
+            card1_title_pour: 'Pour Cost Reduction',
+            card1_title_fbev: 'Food & Beverage Cost Reduction',
+            card1_title_food: 'Food Cost Reduction',
+            card1_desc_pour: 'Dishboard customers reduce pour costs by an average of 3 percentage points through accurate tracking, recipe consistency and real-time supplier price visibility.',
+            card1_desc_fbev: 'Dishboard customers reduce food and beverage costs by an average of 3 percentage points through better invoice control and pour tracking.',
+            card1_desc_food: 'Dishboard customers reduce food costs by an average of 3 percentage points through tighter invoice control and purchasing visibility.',
+            card2_title: 'Cost Leakage Recovery',
+            card2_desc: 'When operators move from manual processes to real-time visibility, they regularly surface overcharges, uncredited returns and pricing errors that were previously invisible.',
+            card3_title: 'Cost Radar Savings',
+            card3_badge_in: 'Included',
+            card3_badge_out: 'Not included',
+            card3_desc_in: "Supplier prices change constantly — but without real-time detection, most operators don't notice for 6–10 weeks. Cost Radar flags every price movement the moment it appears on an invoice, so you can challenge it, renegotiate, or switch supplier before the loss compounds.",
+            card3_not_pre: "Supplier prices change constantly — but without real-time detection, most operators don't notice for 6–10 weeks. Cost Radar flags every price movement the moment it appears on an invoice, so you can challenge it, renegotiate, or switch supplier before the loss compounds. This is on top of operational savings — even a perfectly-run kitchen is exposed to what suppliers quietly do to your costs. Add Cost Radar to recover an estimated ",
+            card3_not_post: '/year.',
+            card4_title: 'Time Returned',
+            card4_hrs_mo_suffix: ' hrs/mo',
+            card4_hours_year: ' hours a year',
+            card4_freed: 'freed from manual admin —',
+            card4_days: 'full working days',
+            card4_days_post: 'you get back to run your business, not process paperwork.',
+            summary_gross: 'Gross Annual Savings',
+            summary_db: 'Dishboard',
+            summary_net: 'Net Annual ROI',
+            roi_for_every: 'For every {one} spent',
+            roi_you_save: 'you save {val}',
+            cta_btn: 'Book a Demo to See How',
+            cta_sub: 'Free 30-min walkthrough · No commitment required',
+            start_over: '← Start over with different numbers',
+            footer: 'Calculations are estimates based on industry benchmarks. Individual results may vary.',
+          },
+
+          cz: {
+            step1: 'Země', step2: 'Podnik', step3: 'Čísla', step4: 'Tarif', step5: 'Úspory',
+            back: 'Zpět',
+            continue_btn: 'Pokračovat',
+            s2_heading: 'Jaký typ podniku provozujete?',
+            s2_sub: 'Předvyplníme odvětvové průměry pro váš segment.',
+            bt_fsr_label: 'Klasická restaurace',  bt_fsr_sub: 'Obsluha u stolu, jídlo na místě',
+            bt_qsr_label: 'Rychlé občerstvení',   bt_qsr_sub: 'Výdejna, rozvoz, takeaway',
+            bt_bar_label: 'Bar / Noční klub',      bt_bar_sub: 'Nápojový podnik, večerní provoz',
+            bt_cafe_label: 'Kavárna / Pekárna',   bt_cafe_sub: 'Káva, snídaně, lehká jídla',
+            s3_heading: 'Zadejte vaše čísla',
+            s3_sub: 'Odvětvové průměry jsou předvyplněny — upravte, pokud znáte svá reálná čísla.',
+            lbl_monthly_revenue: 'Měsíční tržby',
+            lbl_food_question: 'Podáváte v podniku jídlo?',
+            btn_yes_food: '🍔 Ano, podáváme jídlo',
+            btn_drinks_only_cafe: '☕ Pouze nápoje',
+            btn_drinks_only_bar: '🍸 Pouze nápoje',
+            lbl_revenue_split: 'Rozdělení tržeb',
+            lbl_food: 'Jídlo',
+            lbl_drinks: 'Nápoje',
+            slider_50_drinks: '50 % nápoje',
+            slider_100_drinks: '100 % nápoje',
+            benchmark_cafe_split: '60 % nápoje',
+            benchmark_bar_split: '80 % nápoje',
+            lbl_drink_cost: 'Nákladový podíl nápojů (%)',
+            lbl_pour_cost: 'Nákladový podíl nápojů (%)',
+            benchmark_pour: 'Oborový průměr:',
+            pour_note: 'Ztráty přeléváním, rozlitím a přirozeným úbytkem',
+            cafe_drink_note: 'Káva, mléko, sirupy a ostatní suroviny nápojů',
+            lbl_food_cost: 'Nákladový podíl surovin (%)',
+            food_cost_bar_note: '(pouze část za jídlo)',
+            lbl_invoices: 'Dodavatelské faktury za měsíc',
+            invoices_per_month: 'faktur/měsíc',
+            per_month: '/měsíc',
+            benchmark_for: 'Oborový průměr pro',
+            benchmark_cafe_type: 'kavárny',
+            benchmark_bar_type: 'bary',
+            lbl_mgmt: 'Způsob řízení nákladů',
+            mgmt_sub: 'Jak byste popsali váš přístup k řízení nákladů?',
+            ml_oversight_label: 'Přehled',   ml_oversight_sub: 'Sleduji velký obrázek, reaguji měsíčně.',
+            ml_active_label: 'Aktivní',      ml_active_sub: 'Řeším chyby a zdražení každý týden.',
+            ml_precision_label: 'Precizní',  ml_precision_sub: 'Hlídám každou korunu a aktivně vyjednávám.',
+            s4_heading: 'Vyberte tarif Dishboard',
+            s4_sub: 'Všechny tarify zahrnují <strong class="text-slate-700">150 faktur/měsíc</strong>. Roční náklady odečteme od vašich úspor.',
+            lbl_plan_suffix: 'Tarif',
+            per_mo: '/měs.',
+            per_year: '/rok',
+            radar_name: 'Cost Radar',
+            radar_desc: 'Automatická detekce zdražení u všech dodavatelů — okamžitě vás upozorníme, jakmile cena naroste.',
+            radar_optional: 'Volitelné',
+            btn_add_radar: '✓ Přidat Cost Radar',
+            btn_no_radar: 'Zatím ne',
+            lbl_invoice_vol: 'Objem faktur',
+            invoices_included: '150 faktur v ceně všech tarifů',
+            invoice_extra_block: 'extra blok',
+            invoice_extra_blocks: 'extra bloky',
+            invoice_at: 'po',
+            invoice_per_50: '/50 faktur',
+            lbl_total: 'Celkem',
+            btn_show_savings: 'Zobrazit moje úspory',
+            back_to_plan: 'Zpět na tarif',
+            hero_label: 'Čistý roční výnos s Dishboard',
+            hero_based_on: 'Výpočet pro',
+            hero_more_post: ' navíc s Cost Radar',
+            lbl_gross_savings: 'Hrubé úspory',
+            lbl_db_cost: 'Náklady Dishboard',
+            lbl_roi_multiple: 'Násobek ROI',
+            how_you_get_there: 'Z čeho úspory vychází',
+            card1_title_pour: 'Snížení nákladů na nápoje',
+            card1_title_fbev: 'Snížení nákladů na jídlo a nápoje',
+            card1_title_food: 'Snížení nákladů na suroviny',
+            card1_desc_pour: 'Zákazníci Dishboard snižují nákladový podíl nápojů průměrně o 3 procentní body díky přesnému sledování, konzistenci receptur a přehledu o cenách dodavatelů v reálném čase.',
+            card1_desc_fbev: 'Zákazníci Dishboard snižují náklady na jídlo a nápoje průměrně o 3 procentní body díky lepší kontrole faktur a sledování výčepů.',
+            card1_desc_food: 'Zákazníci Dishboard snižují náklady na suroviny průměrně o 3 procentní body díky důkladnější kontrole faktur a přehledu o nákupech.',
+            card2_title: 'Odhalené přeplatky a ztráty',
+            card2_desc: 'Jakmile přejdou provozovatelé od ručního zpracování k přehledu v reálném čase, pravidelně odhalují přeplatky, nezapočítané dobropisy a cenové chyby, které dříve unikaly pozornosti.',
+            card3_title: 'Úspory díky Cost Radar',
+            card3_badge_in: 'Aktivní',
+            card3_badge_out: 'Nezahrnuto',
+            card3_desc_in: 'Ceny dodavatelů se neustále mění — bez detekce v reálném čase si většina provozovatelů zdražení nevšimne 6–10 týdnů. Cost Radar upozorní na každou změnu ceny ihned, jakmile se objeví na faktuře — takže můžete reklamovat, vyjednat slevu nebo změnit dodavatele dříve, než se ztráta nakumuluje.',
+            card3_not_pre: 'Ceny dodavatelů se neustále mění — bez detekce v reálném čase si většina provozovatelů zdražení nevšimne 6–10 týdnů. Cost Radar upozorní na každou změnu ceny ihned, jakmile se objeví na faktuře — takže můžete reklamovat, vyjednat slevu nebo změnit dodavatele. Přidejte Cost Radar a získejte zpět odhadem ',
+            card3_not_post: '/rok.',
+            card4_title: 'Ušetřený čas',
+            card4_hrs_mo_suffix: ' h/měs.',
+            card4_hours_year: ' hodin ročně',
+            card4_freed: 'ušetřených za ruční administrativu —',
+            card4_days: 'celých pracovních dní,',
+            card4_days_post: 'které dostanete zpět pro vedení podniku.',
+            summary_gross: 'Hrubé roční úspory',
+            summary_db: 'Dishboard',
+            summary_net: 'Čistý roční ROI',
+            roi_for_every: 'Za každou investovanou {one}',
+            roi_you_save: 'získáte zpět {val}',
+            cta_btn: 'Domluvte si demo a zjistěte jak',
+            cta_sub: 'Bezplatný 30minutový průchod · Bez závazků',
+            start_over: '← Začít znovu s jinými čísly',
+            footer: 'Kalkulace jsou odhady založené na oborových průměrech. Výsledky se mohou lišit.',
+          },
+
+          sk: {
+            step1: 'Krajina', step2: 'Podnik', step3: 'Čísla', step4: 'Plán', step5: 'Úspory',
+            back: 'Späť',
+            continue_btn: 'Pokračovať',
+            s2_heading: 'Aký typ podniku prevádzkujete?',
+            s2_sub: 'Predvyplníme odvetvové priemery pre váš segment.',
+            bt_fsr_label: 'Klasická reštaurácia',  bt_fsr_sub: 'Obsluha pri stole, jedenie na mieste',
+            bt_qsr_label: 'Rýchle občerstvenie',   bt_qsr_sub: 'Výdajňa, rozvoz, takeaway',
+            bt_bar_label: 'Bar / Nočný klub',       bt_bar_sub: 'Nápojový podnik, večerný provoz',
+            bt_cafe_label: 'Kaviareň / Pekáreň',   bt_cafe_sub: 'Káva, raňajky, ľahké jedlá',
+            s3_heading: 'Zadajte vaše čísla',
+            s3_sub: 'Odvetvové priemery sú predvyplnené — upravte, ak poznáte vaše skutočné hodnoty.',
+            lbl_monthly_revenue: 'Mesačné tržby',
+            lbl_food_question: 'Podávate v podniku jedlo?',
+            btn_yes_food: '🍔 Áno, podávame jedlo',
+            btn_drinks_only_cafe: '☕ Iba nápoje',
+            btn_drinks_only_bar: '🍸 Iba nápoje',
+            lbl_revenue_split: 'Rozdelenie tržieb',
+            lbl_food: 'Jedlo',
+            lbl_drinks: 'Nápoje',
+            slider_50_drinks: '50 % nápoje',
+            slider_100_drinks: '100 % nápoje',
+            benchmark_cafe_split: '60 % nápoje',
+            benchmark_bar_split: '80 % nápoje',
+            lbl_drink_cost: 'Nákladový podiel nápojov (%)',
+            lbl_pour_cost: 'Nákladový podiel nápojov (%)',
+            benchmark_pour: 'Odvetvový priemer:',
+            pour_note: 'Straty prelievaním, rozliatím a prirodzeným úbytkom',
+            cafe_drink_note: 'Káva, mlieko, sirupy a ostatné suroviny nápojov',
+            lbl_food_cost: 'Nákladový podiel surovín (%)',
+            food_cost_bar_note: '(iba časť za jedlo)',
+            lbl_invoices: 'Dodávateľské faktúry za mesiac',
+            invoices_per_month: 'faktúr/mesiac',
+            per_month: '/mesiac',
+            benchmark_for: 'Odvetvový priemer pre',
+            benchmark_cafe_type: 'kaviarne',
+            benchmark_bar_type: 'bary',
+            lbl_mgmt: 'Spôsob riadenia nákladov',
+            mgmt_sub: 'Ako by ste opísali váš prístup k riadeniu nákladov?',
+            ml_oversight_label: 'Prehľad',   ml_oversight_sub: 'Sledujem veľký obraz, reagujem mesačne.',
+            ml_active_label: 'Aktívny',      ml_active_sub: 'Riešim chyby a zdražovanie každý týždeň.',
+            ml_precision_label: 'Precízny',  ml_precision_sub: 'Hlídim každé euro a aktívne vyjednávam.',
+            s4_heading: 'Vyberte plán Dishboard',
+            s4_sub: 'Všetky plány zahŕňajú <strong class="text-slate-700">150 faktúr/mesiac</strong>. Ročné náklady odpočítame od vašich úspor.',
+            lbl_plan_suffix: 'Plán',
+            per_mo: '/mes.',
+            per_year: '/rok',
+            radar_name: 'Cost Radar',
+            radar_desc: 'Automatická detekcia zdražovania u všetkých dodávateľov — okamžite vás upozorníme, akonáhle cena vzrastie.',
+            radar_optional: 'Voliteľné',
+            btn_add_radar: '✓ Pridať Cost Radar',
+            btn_no_radar: 'Zatiaľ nie',
+            lbl_invoice_vol: 'Objem faktúr',
+            invoices_included: '150 faktúr v cene všetkých plánov',
+            invoice_extra_block: 'extra blok',
+            invoice_extra_blocks: 'extra bloky',
+            invoice_at: 'po',
+            invoice_per_50: '/50 faktúr',
+            lbl_total: 'Celkom',
+            btn_show_savings: 'Zobraziť moje úspory',
+            back_to_plan: 'Späť na plán',
+            hero_label: 'Čistý ročný výnos s Dishboard',
+            hero_based_on: 'Výpočet pre',
+            hero_more_post: ' navyše s Cost Radar',
+            lbl_gross_savings: 'Hrubé úspory',
+            lbl_db_cost: 'Náklady Dishboard',
+            lbl_roi_multiple: 'Násobok ROI',
+            how_you_get_there: 'Z čoho úspory vychádzajú',
+            card1_title_pour: 'Zníženie nákladov na nápoje',
+            card1_title_fbev: 'Zníženie nákladov na jedlo a nápoje',
+            card1_title_food: 'Zníženie nákladov na suroviny',
+            card1_desc_pour: 'Zákazníci Dishboard znižujú nákladový podiel nápojov priemerne o 3 percentuálne body vďaka presnému sledovaniu, konzistencii receptúr a prehľadu o cenách dodávateľov v reálnom čase.',
+            card1_desc_fbev: 'Zákazníci Dishboard znižujú náklady na jedlo a nápoje priemerne o 3 percentuálne body vďaka lepšej kontrole faktúr a sledovaniu výčapov.',
+            card1_desc_food: 'Zákazníci Dishboard znižujú náklady na suroviny priemerne o 3 percentuálne body vďaka dôkladnejšej kontrole faktúr a prehľadu o nákupoch.',
+            card2_title: 'Odhalené preplatky a straty',
+            card2_desc: 'Akonáhle prejdú prevádzkovatelia od ručného spracovania k prehľadu v reálnom čase, pravidelne odhaľujú preplatky, nezapočítané dobropisy a cenové chyby, ktoré predtým unikali pozornosti.',
+            card3_title: 'Úspory vďaka Cost Radar',
+            card3_badge_in: 'Aktívny',
+            card3_badge_out: 'Nezahrnutý',
+            card3_desc_in: 'Ceny dodávateľov sa neustále menia — bez detekcie v reálnom čase si väčšina prevádzkovateľov zdraženie nevšimne 6–10 týždňov. Cost Radar upozorní na každú zmenu ceny ihneď, akonáhle sa objaví na faktúre — takže môžete reklamovať, vyjednať zľavu alebo zmeniť dodávateľa skôr, než sa strata nakumuluje.',
+            card3_not_pre: 'Ceny dodávateľov sa neustále menia — bez detekcie v reálnom čase si väčšina prevádzkovateľov zdraženie nevšimne 6–10 týždňov. Cost Radar upozorní na každú zmenu ceny ihneď, akonáhle sa objaví na faktúre — takže môžete reklamovať, vyjednať zľavu alebo zmeniť dodávateľa. Pridajte Cost Radar a získajte späť odhadom ',
+            card3_not_post: '/rok.',
+            card4_title: 'Ušetrený čas',
+            card4_hrs_mo_suffix: ' h/mes.',
+            card4_hours_year: ' hodín ročne',
+            card4_freed: 'ušetrených za ručnú administratívu —',
+            card4_days: 'celých pracovných dní,',
+            card4_days_post: 'ktoré dostanete späť pre vedenie podniku.',
+            summary_gross: 'Hrubé ročné úspory',
+            summary_db: 'Dishboard',
+            summary_net: 'Čistý ročný ROI',
+            roi_for_every: 'Za každé investované {one}',
+            roi_you_save: 'získate späť {val}',
+            cta_btn: 'Dohodnite si demo a zistite ako',
+            cta_sub: 'Bezplatný 30-minútový prehľad · Bez záväzkov',
+            start_over: '← Začať znovu s inými číslami',
+            footer: 'Kalkulácie sú odhady založené na odvetvových priemeroch. Výsledky sa môžu líšiť.',
+          },
+        },
 
         pricingTiers: [
           {
@@ -932,38 +1213,18 @@
             label: 'Starter',
             popular: false,
             prices: { uk: 70, cz: 1725, sk: 70 },
-            features: [
-              '150 invoices/month',
-              'Invoice digitisation',
-              'Basic cost dashboard',
-              'Email support',
-            ],
           },
           {
             key: 'tier2',
             label: 'Professional',
             popular: true,
             prices: { uk: 115, cz: 2825, sk: 115 },
-            features: [
-              '150 invoices/month',
-              'Everything in Starter',
-              'Price change alerts',
-              'Supplier management',
-              'Priority support',
-            ],
           },
           {
             key: 'tier3',
             label: 'Premium',
             popular: false,
             prices: { uk: 165, cz: 3990, sk: 165 },
-            features: [
-              '150 invoices/month',
-              'Everything in Professional',
-              'Advanced analytics',
-              'POS & accounting integrations',
-              'Dedicated account manager',
-            ],
           },
         ],
 
@@ -972,6 +1233,62 @@
           uk:  { fsr: { revenue: 55000, foodCost: 30, invoices: 120 }, qsr: { revenue: 35000, foodCost: 28, invoices: 80  }, bar: { revenue: 30000, foodCost: 20, invoices: 60  }, cafe: { revenue: 20000, foodCost: 25, invoices: 60  } },
           cz:  { fsr: { revenue: 1200000, foodCost: 30, invoices: 120 }, qsr: { revenue: 800000, foodCost: 28, invoices: 80 }, bar: { revenue: 650000, foodCost: 20, invoices: 60 }, cafe: { revenue: 450000, foodCost: 25, invoices: 60 } },
           sk:  { fsr: { revenue: 20000, foodCost: 30, invoices: 120 }, qsr: { revenue: 13000, foodCost: 28, invoices: 80  }, bar: { revenue: 11000, foodCost: 20, invoices: 60  }, cafe: { revenue: 7500,  foodCost: 25, invoices: 60  } },
+        },
+
+        // ── LOCALISATION ─────────────────────────────────────────
+        lang() {
+          return this.country === 'cz' ? 'cz' : this.country === 'sk' ? 'sk' : 'en';
+        },
+        t(key) {
+          const l = this.lang();
+          const val = this.translations[l] && this.translations[l][key] !== undefined
+            ? this.translations[l][key]
+            : this.translations.en[key];
+          return val !== undefined ? val : key;
+        },
+        stepLabel(s) {
+          return this.t(['step1','step2','step3','step4','step5'][s - 1]);
+        },
+        btLabel(key) { return this.t('bt_' + key + '_label'); },
+        btSub(key)   { return this.t('bt_' + key + '_sub'); },
+        mlLabel(key) { return this.t('ml_' + key + '_label'); },
+        mlSub(key)   { return this.t('ml_' + key + '_sub'); },
+
+        card1Title() {
+          if (this.businessType === 'bar' && !this.hasFood) return this.t('card1_title_pour');
+          if (this.businessType === 'bar') return this.t('card1_title_fbev');
+          return this.t('card1_title_food');
+        },
+        card1Desc() {
+          if (this.businessType === 'bar' && !this.hasFood) return this.t('card1_desc_pour');
+          if (this.businessType === 'bar') return this.t('card1_desc_fbev');
+          return this.t('card1_desc_food');
+        },
+
+        heroMoreRadar() {
+          return '+ ' + this.formatCurrency(this.radarSavings()) + this.t('hero_more_post');
+        },
+
+        invoiceNote() {
+          let text = this.t('invoices_included');
+          if (this.planInvoices > 150) {
+            const blocks = (this.planInvoices - 150) / 50;
+            const blockWord = blocks > 1 ? this.t('invoice_extra_blocks') : this.t('invoice_extra_block');
+            text += ' · ' + blocks + ' ' + blockWord + ' ' + this.t('invoice_at') + ' '
+                  + this.formatCurrency(this.currentCountry().invoiceBlockPrice) + this.t('invoice_per_50');
+          }
+          return text;
+        },
+
+        roiForEvery() {
+          const c = this.currentCountry();
+          const one = c.symbolAfter ? '1 ' + c.symbol : c.symbol + '1';
+          return this.t('roi_for_every').replace('{one}', one);
+        },
+        roiYouSave() {
+          const c = this.currentCountry();
+          const val = c.symbolAfter ? this.roiMultiple() + ' ' + c.symbol : c.symbol + this.roiMultiple();
+          return this.t('roi_you_save').replace('{val}', val);
         },
 
         // ── HELPERS ──────────────────────────────────────────────
@@ -1011,17 +1328,15 @@
         formatCurrency(val) {
           const c = this.currentCountry();
           const rounded = Math.round(val);
-          // Format with thousand separators
           const parts = rounded.toString().split('.');
           parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, c.thousandSep);
           const num = parts.join('.');
-          return c.symbolAfter ? num + '\u00a0' + c.symbol : c.symbol + num;
+          return c.symbolAfter ? num + ' ' + c.symbol : c.symbol + num;
         },
 
         // ── CALCULATIONS ─────────────────────────────────────────
         annualRevenue() { return this.monthlyRevenue * 12; },
 
-        // Combined food/bev spend — used as basis for food savings and Cost Radar
         annualFoodBevSpend() {
           if (this.businessType === 'bar' || this.businessType === 'cafe') {
             const foodSpend = this.hasFood
@@ -1033,17 +1348,15 @@
           return this.annualRevenue() * (this.foodCostPercent / 100);
         },
 
-        // Tiered savings rate — how many pp reduction is realistic given current food cost level
         foodSavingsRate() {
           const useDrinkCost = this.businessType === 'bar' || (this.businessType === 'cafe' && !this.hasFood);
           const fc = useDrinkCost ? this.pourCostPercent : this.foodCostPercent;
-          if (fc < 28) return 0.01;   // already well-controlled — 1pp saving
-          if (fc < 32) return 0.02;   // industry average — 2pp saving
-          if (fc < 37) return 0.03;   // above average — 3pp saving
-          return 0.04;                // high leakage — 4pp saving
+          if (fc < 28) return 0.01;
+          if (fc < 32) return 0.02;
+          if (fc < 37) return 0.03;
+          return 0.04;
         },
 
-        // Card 1: Food/pour cost savings — tiered pp reduction applied to actual food/bev spend
         foodCostSavings() {
           if (this.businessType === 'bar' || this.businessType === 'cafe') {
             const bevSpend  = this.annualRevenue() * (this.beverageRevenuePercent / 100) * (this.pourCostPercent / 100);
@@ -1055,37 +1368,26 @@
           return this.annualRevenue() * (this.foodCostPercent / 100) * this.foodSavingsRate() * this.mgmtMultiplier() * this.venueSizeModifier();
         },
 
-        // Card 2: Cost Leakage Recovery — tiered by operator size vs segment benchmark
-        // Smaller operations have fewer controls, more to surface. Floors at 0.24%
-        // (basis: Beverley Hills £1,300 saved on £45k/mo = 0.24% of annual revenue)
         transparencySavingsRate() {
           const ratio = this.monthlyRevenue / this.benchmark().revenue;
-          if (ratio < 0.4) return 0.008;   // very lean, minimal controls
-          if (ratio < 0.8) return 0.005;   // below-average controls
-          if (ratio < 2.0) return 0.0035;  // typical operator — Beverley Hills baseline
-          return 0.0024;                    // larger operator
+          if (ratio < 0.4) return 0.008;
+          if (ratio < 0.8) return 0.005;
+          if (ratio < 2.0) return 0.0035;
+          return 0.0024;
         },
         errorSavings() {
           const raw = this.annualRevenue() * this.transparencySavingsRate();
           return Math.min(raw, this.currentCountry().bucket2Cap * 12);
         },
 
-        // Card 3: Cost Radar — 3.5% of food/bev spend (only active when hasCostRadar)
-        // Basis: Beverly Hills £8,000/£178k food spend = 4.5%; using 3.5% is conservative
-        // Mechanism: supplier price increases go undetected 6-10 weeks on average;
-        // Cost Radar catches them on the invoice → ~50-60% get reversed/renegotiated
         radarSavings() { return this.annualFoodBevSpend() * this.radarRate(); },
 
-        // Card 4: Time saved — informational only, NOT in ROI
-        // Linear: 15 hrs/mo at 50 invoices → 30 hrs/mo at 200 invoices, capped at 30
         hoursSavedPerMonth() {
           const hrs = 15 + (Math.min(this.monthlyInvoices, 200) - 50) * (15 / 150);
           return Math.round(Math.max(15, hrs));
         },
         hoursSavedPerYear() { return this.hoursSavedPerMonth() * 12; },
 
-        // Total ROI: food savings + error savings + radar savings (if selected)
-        // Floor at 115% of plan cost so tiny venues always show a modest positive return
         totalROI() {
           const gross = this.foodCostSavings()
                       + this.errorSavings()
@@ -1116,13 +1418,11 @@
           return (this.totalROI() / cost).toFixed(1);
         },
 
-        // Invoice → admin hours: ~18 min/invoice total (research-backed: Lagom 35h/100inv, BHB 15h/60inv)
         calcAdminHours(invoices) { return Math.max(1, Math.round(invoices * 0.30)); },
 
         // ── ACTIONS ──────────────────────────────────────────────
         selectCountry(code) {
           this.country = code;
-          // Reset business type so benchmarks reload cleanly
           this.businessType = '';
         },
 
@@ -1133,7 +1433,6 @@
           this.foodCostPercent = b.foodCost;
           this.monthlyInvoices = b.invoices;
           this.adminHours = this.calcAdminHours(b.invoices);
-          // Bar / Café defaults
           if (key === 'bar') {
             this.hasFood = true;
             this.beverageRevenuePercent = 80;
@@ -1160,7 +1459,6 @@
         },
 
         goToPlan() {
-          // Auto-set invoice slider to the next threshold at or above monthly invoice count
           const raw = Math.max(150, Math.min(300, this.monthlyInvoices));
           this.planInvoices = Math.min(300, Math.ceil(raw / 50) * 50);
           this.step = 4;
