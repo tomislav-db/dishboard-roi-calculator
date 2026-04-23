@@ -997,14 +997,14 @@
           if (ratio < 0.6) return 1.1;   // small — more leakage, more to gain
           if (ratio < 1.5) return 1.0;   // mid — case study territory, no change
           if (ratio < 3.0) return 0.8;   // large — some controls already exist
-          return 0.65;                    // very large — purchasing team, tight controls
+          return 0.35;                    // very large — purchasing team, tight controls
         },
         radarRate() {
           const ratio = this.monthlyRevenue / this.benchmark().revenue;
           if (ratio < 0.6) return 0.040;  // small — uncontrolled, suppliers take advantage
           if (ratio < 1.5) return 0.035;  // mid — Beverley Hills case study validated
           if (ratio < 3.0) return 0.025;  // large — some supplier controls exist
-          return 0.015;                    // very large — dedicated purchasing, tight
+          return 0.008;                    // very large — dedicated purchasing, tight
         },
 
         // ── CURRENCY FORMATTING ──────────────────────────────────
