@@ -662,6 +662,25 @@
           </div>
         </div>
 
+        <!-- Management style switcher -->
+        <div class="px-8 sm:px-10 pt-4 pb-2">
+          <div class="flex items-center gap-4 bg-slate-50 rounded-2xl px-5 py-3 border border-slate-100">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest shrink-0" x-text="t('results_mgmt_label')"></span>
+            <div class="flex gap-2 flex-wrap">
+              <template x-for="level in managementLevels" :key="level.key">
+                <button
+                  @click="managementStyle = level.key"
+                  class="px-4 py-1.5 rounded-xl text-sm font-semibold transition-all"
+                  :class="managementStyle === level.key
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-400'"
+                  x-text="mlLabel(level.key)"
+                ></button>
+              </template>
+            </div>
+          </div>
+        </div>
+
         <!-- Breakdown cards -->
         <div class="p-8 sm:p-10 space-y-4">
           <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4" x-text="t('how_you_get_there')"></h3>
@@ -976,6 +995,7 @@
             lbl_gross_savings: 'Gross Savings',
             lbl_db_cost: 'Dishboard Cost',
             lbl_roi_multiple: 'ROI Multiple',
+            results_mgmt_label: 'Your approach',
             how_you_get_there: 'How you get there',
             card1_title_pour: 'Pour Cost Reduction',
             card1_title_fbev: 'Food & Beverage Cost Reduction',
@@ -1075,6 +1095,7 @@
             lbl_gross_savings: 'Hrubé úspory',
             lbl_db_cost: 'Náklady Dishboard',
             lbl_roi_multiple: 'Násobek ROI',
+            results_mgmt_label: 'Váš přístup',
             how_you_get_there: 'Z čeho úspory vychází',
             card1_title_pour: 'Snížení nákladů na nápoje',
             card1_title_fbev: 'Snížení nákladů na jídlo a nápoje',
@@ -1174,6 +1195,7 @@
             lbl_gross_savings: 'Hrubé úspory',
             lbl_db_cost: 'Náklady Dishboard',
             lbl_roi_multiple: 'Násobok ROI',
+            results_mgmt_label: 'Váš prístup',
             how_you_get_there: 'Z čoho úspory vychádzajú',
             card1_title_pour: 'Zníženie nákladov na nápoje',
             card1_title_fbev: 'Zníženie nákladov na jedlo a nápoje',
@@ -1378,7 +1400,13 @@
         },
         errorSavings() {
           const raw = this.annualRevenue() * this.transparencySavingsRate();
-          return Math.min(raw, this.currentCountry().bucket2Cap * 12);
+          const capped = Math.min(raw, this.currentCountry().bucket2Cap * 12);
+          return capped * this.mgmtMultiplier();
+        },
+
+        minNetROI() {
+          const floors = { uk: 1000, cz: 25000, sk: 1000 };
+          return floors[this.country] || 1000;
         },
 
         radarSavings() { return this.annualFoodBevSpend() * this.radarRate(); },
@@ -1393,7 +1421,8 @@
           const gross = this.foodCostSavings()
                       + this.errorSavings()
                       + (this.hasCostRadar ? this.radarSavings() : 0);
-          return Math.max(gross, this.annualDishboardCost() * 1.15);
+          const minGross = this.annualDishboardCost() + this.minNetROI();
+          return Math.max(gross, Math.max(this.annualDishboardCost() * 1.15, minGross));
         },
 
         radarMonthly() {
