@@ -1400,8 +1400,7 @@
         },
         errorSavings() {
           const raw = this.annualRevenue() * this.transparencySavingsRate();
-          const capped = Math.min(raw, this.currentCountry().bucket2Cap * 12);
-          return capped * this.mgmtMultiplier();
+          return Math.min(raw, this.currentCountry().bucket2Cap * 12);
         },
 
         minNetROI() {
