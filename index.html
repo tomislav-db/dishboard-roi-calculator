@@ -1225,9 +1225,9 @@
 
         // Benchmarks indexed by [country][businessType]
         benchmarks: {
-          uk:  { fsr: { revenue: 55000,   foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 35000,  foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 30000,  foodCost: 28, invoices: 60 }, cafe: { revenue: 20000, foodCost: 28, invoices: 60 } },
-          cz:  { fsr: { revenue: 1200000, foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 800000, foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 650000, foodCost: 28, invoices: 60 }, cafe: { revenue: 450000, foodCost: 28, invoices: 60 } },
-          sk:  { fsr: { revenue: 20000,   foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 13000,  foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 11000,  foodCost: 28, invoices: 60 }, cafe: { revenue: 7500,  foodCost: 28, invoices: 60 } },
+          uk:  { fsr: { revenue: 55000,   foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 35000,  foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 30000,  foodCost: 28, defaultFoodCost: 33, invoices: 60 }, cafe: { revenue: 20000, foodCost: 28, defaultFoodCost: 33, invoices: 60 } },
+          cz:  { fsr: { revenue: 1200000, foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 800000, foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 650000, foodCost: 28, defaultFoodCost: 33, invoices: 60 }, cafe: { revenue: 450000, foodCost: 28, defaultFoodCost: 33, invoices: 60 } },
+          sk:  { fsr: { revenue: 20000,   foodCost: 30, defaultFoodCost: 33, invoices: 120 }, qsr: { revenue: 13000,  foodCost: 28, defaultFoodCost: 30, invoices: 80 }, bar: { revenue: 11000,  foodCost: 28, defaultFoodCost: 33, invoices: 60 }, cafe: { revenue: 7500,  foodCost: 28, defaultFoodCost: 33, invoices: 60 } },
         },
 
         // ── LOCALISATION ─────────────────────────────────────────
@@ -1362,11 +1362,16 @@
 
         foodCostSavings() {
           if (this.businessType === 'bar' || this.businessType === 'cafe') {
-            const bevSpend  = this.annualRevenue() * (this.beverageRevenuePercent / 100) * (this.pourCostPercent / 100);
-            const foodSpend = this.hasFood
-              ? this.annualRevenue() * ((100 - this.beverageRevenuePercent) / 100) * (this.foodCostPercent / 100)
-              : 0;
-            return (bevSpend + foodSpend) * this.foodSavingsRate() * this.mgmtMultiplier() * this.venueSizeModifier();
+            const bevSpend = this.annualRevenue() * (this.beverageRevenuePercent / 100) * (this.pourCostPercent / 100);
+            const m = this.mgmtMultiplier();
+            const v = this.venueSizeModifier();
+            if (!this.hasFood) {
+              return bevSpend * this.foodSavingsRate() * m * v;
+            }
+            const foodSpend = this.annualRevenue() * ((100 - this.beverageRevenuePercent) / 100) * (this.foodCostPercent / 100);
+            const fc = this.foodCostPercent;
+            const foodRate = fc < 28 ? 0.01 : fc < 32 ? 0.02 : fc < 37 ? 0.03 : 0.04;
+            return (bevSpend * this.foodSavingsRate() + foodSpend * foodRate) * m * v;
           }
           return this.annualRevenue() * (this.foodCostPercent / 100) * this.foodSavingsRate() * this.mgmtMultiplier() * this.venueSizeModifier();
         },
