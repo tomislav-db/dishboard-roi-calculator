@@ -662,25 +662,6 @@
           </div>
         </div>
 
-        <!-- Management style switcher -->
-        <div class="px-8 sm:px-10 pt-4 pb-2">
-          <div class="flex items-center gap-4 bg-slate-50 rounded-2xl px-5 py-3 border border-slate-100">
-            <span class="text-xs font-semibold text-slate-400 uppercase tracking-widest shrink-0" x-text="t('results_mgmt_label')"></span>
-            <div class="flex gap-2 flex-wrap">
-              <template x-for="level in managementLevels" :key="level.key">
-                <button
-                  @click="managementStyle = level.key"
-                  class="px-4 py-1.5 rounded-xl text-sm font-semibold transition-all"
-                  :class="managementStyle === level.key
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-400'"
-                  x-text="mlLabel(level.key)"
-                ></button>
-              </template>
-            </div>
-          </div>
-        </div>
-
         <!-- Breakdown cards -->
         <div class="p-8 sm:p-10 space-y-4">
           <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4" x-text="t('how_you_get_there')"></h3>
@@ -917,9 +898,9 @@
         ],
 
         managementLevels: [
-          { key: 'oversight', multiplier: 0.4 },
-          { key: 'active',    multiplier: 0.6 },
-          { key: 'precision', multiplier: 0.8 },
+          { key: 'oversight', multiplier: 0.65 },
+          { key: 'active',    multiplier: 0.80 },
+          { key: 'precision', multiplier: 0.95 },
         ],
 
         // ── TRANSLATIONS ─────────────────────────────────────────
@@ -995,7 +976,6 @@
             lbl_gross_savings: 'Gross Savings',
             lbl_db_cost: 'Dishboard Cost',
             lbl_roi_multiple: 'ROI Multiple',
-            results_mgmt_label: 'Your approach',
             how_you_get_there: 'How you get there',
             card1_title_pour: 'Pour Cost Reduction',
             card1_title_fbev: 'Food & Beverage Cost Reduction',
@@ -1095,7 +1075,6 @@
             lbl_gross_savings: 'Hrubé úspory',
             lbl_db_cost: 'Náklady Dishboard',
             lbl_roi_multiple: 'Násobek ROI',
-            results_mgmt_label: 'Váš přístup',
             how_you_get_there: 'Z čeho úspory vychází',
             card1_title_pour: 'Snížení nákladů na nápoje',
             card1_title_fbev: 'Snížení nákladů na jídlo a nápoje',
@@ -1195,7 +1174,6 @@
             lbl_gross_savings: 'Hrubé úspory',
             lbl_db_cost: 'Náklady Dishboard',
             lbl_roi_multiple: 'Násobok ROI',
-            results_mgmt_label: 'Váš prístup',
             how_you_get_there: 'Z čoho úspory vychádzajú',
             card1_title_pour: 'Zníženie nákladov na nápoje',
             card1_title_fbev: 'Zníženie nákladov na jedlo a nápoje',
@@ -1238,13 +1216,13 @@
           },
           {
             key: 'tier2',
-            label: 'Standard',
+            label: 'Professional',
             popular: true,
             prices: { uk: 115, cz: 2825, sk: 115 },
           },
           {
             key: 'tier3',
-            label: 'Professional',
+            label: 'Premium',
             popular: false,
             prices: { uk: 165, cz: 3990, sk: 165 },
           },
@@ -1333,9 +1311,10 @@
         },
         venueSizeModifier() {
           const ratio = this.monthlyRevenue / this.benchmark().revenue;
-          if (ratio < 0.6) return 1.1;   // small — more leakage, more to gain
-          if (ratio < 1.5) return 1.0;   // mid — case study territory, no change
-          if (ratio < 3.0) return 0.8;   // large — some controls already exist
+          if (ratio < 0.5) return 1.5;   // micro — almost no controls, lots to surface
+          if (ratio < 1.0) return 1.2;   // small — below benchmark
+          if (ratio < 2.0) return 1.0;   // mid — benchmark territory
+          if (ratio < 4.0) return 0.6;   // large — some controls exist
           return 0.35;                    // very large — purchasing team, tight controls
         },
         radarRate() {
@@ -1373,6 +1352,13 @@
         foodSavingsRate() {
           const useDrinkCost = this.businessType === 'bar' || (this.businessType === 'cafe' && !this.hasFood);
           const fc = useDrinkCost ? this.pourCostPercent : this.foodCostPercent;
+          if (useDrinkCost) {
+            // Bar ideal pour cost is 18–24%, so thresholds shift down ~4pp vs food
+            if (fc < 22) return 0.01;
+            if (fc < 26) return 0.02;
+            if (fc < 31) return 0.03;
+            return 0.04;
+          }
           if (fc < 28) return 0.01;
           if (fc < 32) return 0.02;
           if (fc < 37) return 0.03;
@@ -1399,13 +1385,8 @@
           return 0.003;                    // large — minimal change vs original
         },
         errorSavings() {
-          const raw = this.annualRevenue() * this.transparencySavingsRate();
+          const raw = this.annualRevenue() * this.transparencySavingsRate() * this.venueSizeModifier();
           return Math.min(raw, this.currentCountry().bucket2Cap * 12);
-        },
-
-        minNetROI() {
-          const floors = { uk: 1000, cz: 25000, sk: 1000 };
-          return floors[this.country] || 1000;
         },
 
         radarSavings() { return this.annualFoodBevSpend() * this.radarRate(); },
@@ -1417,11 +1398,9 @@
         hoursSavedPerYear() { return this.hoursSavedPerMonth() * 12; },
 
         totalROI() {
-          const gross = this.foodCostSavings()
-                      + this.errorSavings()
-                      + (this.hasCostRadar ? this.radarSavings() : 0);
-          const minGross = this.annualDishboardCost() + this.minNetROI();
-          return Math.max(gross, Math.max(this.annualDishboardCost() * 1.15, minGross));
+          return this.foodCostSavings()
+               + this.errorSavings()
+               + (this.hasCostRadar ? this.radarSavings() : 0);
         },
 
         radarMonthly() {
