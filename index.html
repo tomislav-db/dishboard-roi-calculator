@@ -274,26 +274,18 @@
         <div class="mb-8">
           <div class="flex items-center justify-between mb-2">
             <label class="text-sm font-semibold text-slate-700" x-text="t('lbl_monthly_revenue')"></label>
-            <div class="flex items-center gap-1">
-              <span class="text-xs font-medium text-slate-500" x-text="currentCountry().symbol"></span>
-              <input
-                type="number"
-                x-model.number="monthlyRevenue"
-                @input="clampRevenue()"
-                class="w-28 text-right text-sm font-bold text-slate-900 border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-brand-400"
-              />
-            </div>
+            <span class="text-sm font-bold text-slate-900" x-text="formatCurrency(monthlyRevenue)"></span>
           </div>
           <input
             type="range"
             x-model.number="monthlyRevenue"
-            :min="currentCountry().revenueMin"
+            :min="revenueMinCurrent()"
             :max="currentCountry().revenueMax"
             :step="currentCountry().revenueStep"
             class="w-full accent-brand-600"
           />
           <div class="flex justify-between text-xs text-slate-400 mt-1">
-            <span x-text="formatCurrency(currentCountry().revenueMin)"></span>
+            <span x-text="formatCurrency(revenueMinCurrent())"></span>
             <span x-text="formatCurrency(currentCountry().revenueMax)"></span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
@@ -398,13 +390,13 @@
             type="range"
             x-model.number="foodCostPercent"
             min="5"
-            max="60"
+            max="50"
             step="0.5"
             class="w-full accent-brand-600"
           />
           <div class="flex justify-between text-xs text-slate-400 mt-1">
             <span>5%</span>
-            <span>60%</span>
+            <span>50%</span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
             <span x-text="t('benchmark_for')"></span>
@@ -850,6 +842,7 @@
             thousandSep: ',',
             adminRate: 15,
             revenueMin: 5000,
+            revenueMinFSR: 10000,
             revenueMax: 500000,
             revenueStep: 1000,
             radarPrice: 40,
@@ -863,11 +856,12 @@
             currency: 'CZK',
             symbol: 'Kč',
             symbolAfter: true,
-            thousandSep: ' ',
+            thousandSep: '.',
             adminRate: 250,
-            revenueMin: 100000,
+            revenueMin: 125000,
+            revenueMinFSR: 250000,
             revenueMax: 10000000,
-            revenueStep: 50000,
+            revenueStep: 25000,
             radarPrice: 1000,
             invoiceBlockPrice: 500,
             bucket2Cap: 37500,
@@ -879,9 +873,10 @@
             currency: 'EUR',
             symbol: '€',
             symbolAfter: false,
-            thousandSep: ' ',
+            thousandSep: '.',
             adminRate: 8.5,
-            revenueMin: 2000,
+            revenueMin: 5000,
+            revenueMinFSR: 10000,
             revenueMax: 300000,
             revenueStep: 1000,
             radarPrice: 40,
@@ -1457,9 +1452,16 @@
           this.adminHours = this.calcAdminHours(this.monthlyInvoices);
         },
 
+        revenueMinCurrent() {
+          const c = this.currentCountry();
+          if (this.businessType === 'fsr' || this.businessType === 'qsr') {
+            return c.revenueMinFSR || c.revenueMin;
+          }
+          return c.revenueMin;
+        },
         clampRevenue() {
           const c = this.currentCountry();
-          this.monthlyRevenue = Math.min(Math.max(this.monthlyRevenue, c.revenueMin), c.revenueMax);
+          this.monthlyRevenue = Math.min(Math.max(this.monthlyRevenue, this.revenueMinCurrent()), c.revenueMax);
         },
 
         clampInvoices() {
