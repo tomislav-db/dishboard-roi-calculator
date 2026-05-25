@@ -1307,10 +1307,10 @@
         },
         venueSizeModifier() {
           const ratio = this.monthlyRevenue / this.benchmark().revenue;
-          if (ratio < 0.5) return 1.5;   // micro — almost no controls, lots to surface
-          if (ratio < 1.0) return 1.2;   // small — below benchmark
-          if (ratio < 2.0) return 1.0;   // mid — benchmark territory
-          if (ratio < 4.0) return 0.6;   // large — some controls exist
+          if (ratio < 0.5) return 1.4;   // micro — almost no controls, lots to surface
+          if (ratio < 1.0) return 1.1;   // small — below benchmark
+          if (ratio < 3.0) return 1.0;   // mid — benchmark territory (up to 3×)
+          if (ratio < 6.0) return 0.65;  // large — some controls exist
           return 0.35;                    // very large — purchasing team, tight controls
         },
         radarRate() {
