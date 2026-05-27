@@ -153,8 +153,8 @@
     </div>
 
     <!-- Progress Bar -->
-    <div class="flex items-center justify-center gap-2 mb-8" x-show="step <= 4">
-      <template x-for="s in [1,2,3,4]" :key="s">
+    <div class="flex items-center justify-center gap-2 mb-8" x-show="step <= 5">
+      <template x-for="s in [1,2,3,4,5]" :key="s">
         <div class="flex items-center gap-2">
           <div
             class="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-all duration-300"
@@ -176,7 +176,7 @@
             :class="step >= s ? 'text-slate-700' : 'text-slate-400'"
             x-text="stepLabel(s)"
           ></span>
-          <template x-if="s < 4">
+          <template x-if="s < 5">
             <div class="w-6 h-px" :class="step > s ? 'bg-brand-600' : 'bg-slate-200'"></div>
           </template>
         </div>
@@ -463,8 +463,152 @@
 
         <div class="flex justify-end">
           <button
-            @click="goToResults()"
+            @click="goToPlan()"
             class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200 transition-all duration-200"
+          >
+            <span x-text="t('continue_btn')"></span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 4: PLAN SELECTION ==================== -->
+      <div x-show="step === 4" class="p-8 sm:p-10">
+        <button @click="step = 3" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 mb-6 transition-colors">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span x-text="t('back')"></span>
+        </button>
+        <h2 class="text-2xl font-bold text-slate-900 mb-1" x-text="t('s4_heading')"></h2>
+        <p class="text-slate-500 text-sm mb-2" x-html="t('s4_sub')"></p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <template x-for="tier in pricingTiers" :key="tier.key">
+            <button
+              @click="selectedTier = tier.key"
+              class="type-card rounded-2xl border-2 p-5 text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-400 relative"
+              :class="selectedTier === tier.key
+                ? 'border-brand-600 bg-brand-50 shadow-md shadow-brand-100'
+                : 'border-slate-100 bg-slate-50 hover:border-slate-300'"
+            >
+              <p class="text-xs font-semibold uppercase tracking-wide mb-3"
+                :class="selectedTier === tier.key ? 'text-brand-600' : 'text-slate-400'"
+                x-text="tier.label + ' ' + t('lbl_plan_suffix')"></p>
+
+              <!-- Price -->
+              <div class="mb-1">
+                <span class="text-2xl font-extrabold text-slate-900" x-text="formatCurrency(tier.prices[country])"></span>
+                <span class="text-sm text-slate-400" x-text="t('per_mo')"></span>
+              </div>
+              <p class="text-xs text-slate-400" x-text="formatCurrency(tier.prices[country] * 12) + t('per_year')"></p>
+
+              <!-- Selected indicator -->
+              <div
+                x-show="selectedTier === tier.key"
+                class="absolute top-3 right-3 w-5 h-5 bg-brand-600 rounded-full flex items-center justify-center"
+              >
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </button>
+          </template>
+        </div>
+
+        <!-- ── Cost Radar Add-on ── -->
+        <div class="mt-8 mb-6">
+          <div class="flex items-start justify-between gap-4 mb-3">
+            <div>
+              <p class="text-sm font-semibold text-slate-700" x-text="t('radar_name')"></p>
+              <p class="text-xs text-slate-400 mt-0.5" x-text="t('radar_desc')"></p>
+            </div>
+            <span
+              class="shrink-0 text-xs font-bold px-2 py-1 rounded-lg"
+              :class="hasCostRadar ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500'"
+              x-text="hasCostRadar ? '+' + formatCurrency(currentCountry().radarPrice) + t('per_mo') : t('radar_optional')"
+            ></span>
+          </div>
+          <div class="flex gap-3">
+            <button
+              @click="hasCostRadar = true"
+              class="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
+              :class="hasCostRadar ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
+              x-text="t('btn_add_radar')"
+            ></button>
+            <button
+              @click="hasCostRadar = false"
+              class="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
+              :class="!hasCostRadar ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'"
+              x-text="t('btn_no_radar')"
+            ></button>
+          </div>
+        </div>
+
+        <!-- ── Invoice Volume ── -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-semibold text-slate-700" x-text="t('lbl_invoice_vol')"></label>
+            <span class="text-sm font-bold text-slate-900">
+              <span x-text="planInvoices"></span>
+              <span class="text-slate-400 font-normal" x-text="t('per_month')"></span>
+              <span
+                x-show="planInvoices > 150"
+                class="ml-1 text-xs font-bold text-amber-600"
+                x-text="'+' + formatCurrency(invoiceOverageMonthly()) + t('per_mo')"></span>
+            </span>
+          </div>
+          <input
+            type="range"
+            x-model.number="planInvoices"
+            min="150"
+            max="300"
+            step="50"
+            class="w-full accent-brand-600"
+          />
+          <!-- Tick labels -->
+          <div class="flex justify-between text-xs mt-1">
+            <span :class="planInvoices === 150 ? 'text-brand-600 font-semibold' : 'text-slate-400'">150</span>
+            <span :class="planInvoices === 200 ? 'text-brand-600 font-semibold' : 'text-slate-400'">200</span>
+            <span :class="planInvoices === 250 ? 'text-brand-600 font-semibold' : 'text-slate-400'">250</span>
+            <span :class="planInvoices === 300 ? 'text-brand-600 font-semibold' : 'text-slate-400'">300</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1" x-text="invoiceNote()"></p>
+        </div>
+
+        <!-- ── Dynamic total strip ── -->
+        <div x-show="selectedTier" class="mb-6 rounded-2xl border border-brand-100 bg-brand-50 overflow-hidden">
+          <div class="px-4 py-3 space-y-1.5">
+            <!-- Tier base -->
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-slate-600" x-text="currentTier().label + ' ' + t('lbl_plan_suffix')"></span>
+              <span class="font-semibold text-slate-800" x-text="formatCurrency(currentTier().prices[country]) + t('per_mo')"></span>
+            </div>
+            <!-- Radar add-on -->
+            <div x-show="hasCostRadar" class="flex items-center justify-between text-sm">
+              <span class="text-slate-500">+ Cost Radar</span>
+              <span class="font-semibold text-slate-700" x-text="'+' + formatCurrency(currentCountry().radarPrice) + t('per_mo')"></span>
+            </div>
+            <!-- Invoice overage -->
+            <div x-show="planInvoices > 150" class="flex items-center justify-between text-sm">
+              <span class="text-slate-500" x-text="'+ ' + planInvoices + ' ' + t('invoices_per_month')"></span>
+              <span class="font-semibold text-slate-700" x-text="'+' + formatCurrency(invoiceOverageMonthly()) + t('per_mo')"></span>
+            </div>
+          </div>
+          <!-- Total -->
+          <div class="px-4 py-3 border-t border-brand-100 bg-white/60 flex items-center justify-between">
+            <span class="text-sm font-bold text-slate-800" x-text="t('lbl_total')"></span>
+            <div class="text-right">
+              <span class="text-lg font-extrabold text-brand-700" x-text="formatCurrency(totalMonthlyPlan()) + t('per_mo')"></span>
+              <span class="text-xs text-slate-400 ml-2" x-text="formatCurrency(annualDishboardCost()) + t('per_year')"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-2 flex justify-end">
+          <button
+            @click="goToResults()"
+            :disabled="!selectedTier"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
+            :class="selectedTier
+              ? 'bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-200 hover:shadow-lg hover:shadow-brand-200'
+              : 'bg-slate-100 text-slate-400 cursor-not-allowed'"
           >
             <span x-text="t('btn_show_savings')"></span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -472,14 +616,14 @@
         </div>
       </div>
 
-      <!-- ==================== STEP 4: RESULTS ==================== -->
-      <div x-show="step === 4" class="overflow-hidden">
+      <!-- ==================== STEP 5: RESULTS ==================== -->
+      <div x-show="step === 5" class="overflow-hidden">
 
         <!-- Back button -->
         <div class="px-8 sm:px-10 pt-6">
-          <button @click="step = 3" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors">
+          <button @click="step = 4" class="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-600 transition-colors">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L4 7l5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span x-text="t('back')"></span>
+            <span x-text="t('back_to_plan')"></span>
           </button>
         </div>
 
@@ -487,10 +631,28 @@
         <div class="roi-hero p-8 sm:p-10 text-center text-white">
           <p class="text-brand-100 text-sm font-medium uppercase tracking-widest mb-2" x-text="t('hero_label')"></p>
           <div class="text-5xl sm:text-6xl font-black tracking-tight mb-2" x-text="formatCurrency(displayTotal)"></div>
-          <p class="text-brand-100 text-sm">
+          <p class="text-brand-100 text-sm mb-4">
             <span x-text="t('hero_based_on')"></span>
             <span class="font-semibold text-white" x-text="' ' + currentCountry().name + ' · ' + btLabel(businessType)"></span>
+            <span x-show="!hasCostRadar" class="block text-brand-200 text-xs mt-1" x-text="heroMoreRadar()"></span>
           </p>
+          <!-- Gross / cost split -->
+          <div class="inline-flex items-center gap-4 bg-white/10 rounded-2xl px-5 py-3 text-sm">
+            <div class="text-center">
+              <p class="text-brand-200 text-xs mb-0.5" x-text="t('lbl_gross_savings')"></p>
+              <p class="font-bold text-white" x-text="formatCurrency(totalROI())"></p>
+            </div>
+            <div class="w-px h-8 bg-white/20"></div>
+            <div class="text-center">
+              <p class="text-brand-200 text-xs mb-0.5" x-text="t('lbl_db_cost')"></p>
+              <p class="font-bold text-rose-300" x-text="'−' + formatCurrency(annualDishboardCost())"></p>
+            </div>
+            <div class="w-px h-8 bg-white/20"></div>
+            <div class="text-center">
+              <p class="text-brand-200 text-xs mb-0.5" x-text="t('lbl_roi_multiple')"></p>
+              <p class="font-bold text-white" x-text="roiMultiple() + '×'"></p>
+            </div>
+          </div>
         </div>
 
         <!-- Breakdown cards -->
@@ -525,70 +687,47 @@
             </div>
           </div>
 
-          <!-- Card 3: Cost Radar toggle + card -->
-          <div class="animate-fadeInUp" style="animation-delay:0.3s">
-            <!-- Toggle -->
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 mb-3">
-              <div class="flex items-center justify-between gap-4 mb-3">
-                <div>
-                  <p class="text-sm font-semibold text-slate-700" x-text="t('radar_name')"></p>
-                  <p class="text-xs text-slate-400 mt-0.5" x-text="t('radar_desc')"></p>
-                </div>
-              </div>
-              <div class="flex gap-3">
-                <button
-                  @click="hasCostRadar = true; animateCounter(400)"
-                  class="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
-                  :class="hasCostRadar ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'"
-                  x-text="t('btn_add_radar')"
-                ></button>
-                <button
-                  @click="hasCostRadar = false; animateCounter(400)"
-                  class="flex-1 py-2.5 rounded-xl border-2 text-sm font-semibold transition-all duration-200 focus:outline-none"
-                  :class="!hasCostRadar ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'"
-                  x-text="t('btn_no_radar')"
-                ></button>
-              </div>
+          <!-- Card 3: Cost Radar — selected -->
+          <div
+            x-show="hasCostRadar"
+            class="animate-fadeInUp rounded-2xl border border-brand-200 bg-brand-50 p-5 flex gap-4 items-start"
+            style="animation-delay:0.3s"
+          >
+            <div class="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#1e48ef" stroke-width="1.5"/><circle cx="10" cy="10" r="3.5" stroke="#1e48ef" stroke-width="1.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#1e48ef" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
-            <!-- Card 3 — selected -->
-            <div
-              x-show="hasCostRadar"
-              class="rounded-2xl border border-brand-200 bg-brand-50 p-5 flex gap-4 items-start"
-            >
-              <div class="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center shrink-0">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#1e48ef" stroke-width="1.5"/><circle cx="10" cy="10" r="3.5" stroke="#1e48ef" stroke-width="1.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#1e48ef" stroke-width="1.5" stroke-linecap="round"/></svg>
-              </div>
-              <div class="flex-1">
-                <div class="flex items-baseline justify-between flex-wrap gap-2">
-                  <div class="flex items-center gap-2">
-                    <h4 class="font-bold text-slate-800 text-base" x-text="t('card3_title')"></h4>
-                    <span class="text-xs font-semibold bg-brand-600 text-white px-2 py-0.5 rounded-full" x-text="t('card3_badge_in')"></span>
-                  </div>
-                  <span class="text-xl font-extrabold text-brand-700" x-text="formatCurrency(radarSavings())"></span>
+            <div class="flex-1">
+              <div class="flex items-baseline justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold text-slate-800 text-base" x-text="t('card3_title')"></h4>
+                  <span class="text-xs font-semibold bg-brand-600 text-white px-2 py-0.5 rounded-full" x-text="t('card3_badge_in')"></span>
                 </div>
-                <p class="text-sm text-slate-500 mt-1.5" x-text="t('card3_desc_in')"></p>
+                <span class="text-xl font-extrabold text-brand-700" x-text="formatCurrency(radarSavings())"></span>
               </div>
+              <p class="text-sm text-slate-500 mt-1.5" x-text="t('card3_desc_in')"></p>
             </div>
-            <!-- Card 3 — not selected -->
-            <div
-              x-show="!hasCostRadar"
-              class="rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-5 flex gap-4 items-start"
-            >
-              <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#94a3b8" stroke-width="1.5"/><circle cx="10" cy="10" r="3.5" stroke="#94a3b8" stroke-width="1.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/></svg>
-              </div>
-              <div class="flex-1">
-                <div class="flex items-baseline justify-between flex-wrap gap-2">
-                  <div class="flex items-center gap-2">
-                    <h4 class="font-bold text-slate-500 text-base" x-text="t('card3_title')"></h4>
-                    <span class="text-xs font-semibold bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full" x-text="t('card3_badge_out')"></span>
-                  </div>
-                  <span class="text-xl font-extrabold text-slate-400" x-text="formatCurrency(radarSavings())"></span>
+          </div>
+
+          <!-- Card 3: Cost Radar — not selected -->
+          <div
+            x-show="!hasCostRadar"
+            class="animate-fadeInUp rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-5 flex gap-4 items-start"
+            style="animation-delay:0.3s"
+          >
+            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#94a3b8" stroke-width="1.5"/><circle cx="10" cy="10" r="3.5" stroke="#94a3b8" stroke-width="1.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-baseline justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                  <h4 class="font-bold text-slate-500 text-base" x-text="t('card3_title')"></h4>
+                  <span class="text-xs font-semibold bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full" x-text="t('card3_badge_out')"></span>
                 </div>
-                <p class="text-sm text-slate-400 mt-1.5">
-                  <span x-text="t('card3_not_pre')"></span><strong class="text-slate-600" x-text="formatCurrency(radarSavings())"></strong><span x-text="t('card3_not_post')"></span>
-                </p>
+                <span class="text-xl font-extrabold text-slate-400" x-text="formatCurrency(radarSavings())"></span>
               </div>
+              <p class="text-sm text-slate-400 mt-1.5">
+                <span x-text="t('card3_not_pre')"></span><strong class="text-slate-600" x-text="formatCurrency(radarSavings())"></strong><span x-text="t('card3_not_post')"></span>
+              </p>
             </div>
           </div>
 
@@ -608,6 +747,33 @@
                 <strong class="text-slate-700" x-text="Math.round(hoursSavedPerYear() / 8) + ' ' + t('card4_days')"></strong>
                 <span x-text="' ' + t('card4_days_post')"></span>
               </p>
+            </div>
+          </div>
+
+          <!-- Summary row -->
+          <div class="mt-2 rounded-2xl bg-slate-900 overflow-hidden">
+            <div class="p-4 flex items-center justify-between gap-4 border-b border-slate-700/60">
+              <div>
+                <p class="text-slate-400 text-xs font-medium" x-text="t('summary_gross')"></p>
+                <p class="text-white text-xl font-black" x-text="formatCurrency(totalROI())"></p>
+              </div>
+            </div>
+            <div class="px-4 py-3 flex items-center justify-between gap-4 border-b border-slate-700/60">
+              <div class="flex items-center gap-2">
+                <span class="text-slate-400 text-xs font-medium" x-text="t('summary_db')"></span>
+                <span class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full" x-text="currentTier().label + ' · ' + formatCurrency(currentTier().prices[country]) + t('per_mo')"></span>
+              </div>
+              <p class="text-rose-400 text-sm font-bold" x-text="'−' + formatCurrency(annualDishboardCost())"></p>
+            </div>
+            <div class="px-4 py-4 flex items-center justify-between gap-4">
+              <div>
+                <p class="text-slate-400 text-xs font-medium" x-text="t('summary_net')"></p>
+                <p class="text-emerald-400 text-2xl font-black" x-text="formatCurrency(netROI())"></p>
+              </div>
+              <div class="text-right">
+                <p class="text-slate-400 text-xs" x-text="roiForEvery()"></p>
+                <p class="text-white text-lg font-bold" x-text="roiYouSave()"></p>
+              </div>
             </div>
           </div>
 
@@ -736,7 +902,7 @@
         // ── TRANSLATIONS ─────────────────────────────────────────
         translations: {
           en: {
-            step1: 'Country', step2: 'Business', step3: 'Numbers', step4: 'Savings',
+            step1: 'Country', step2: 'Business', step3: 'Numbers', step4: 'Plan', step5: 'Savings',
             back: 'Back',
             continue_btn: 'Continue',
             // Step 2
@@ -800,7 +966,7 @@
             btn_show_savings: 'Show My Savings',
             // Step 5
             back_to_plan: 'Back to plan',
-            hero_label: 'Gross Annual Savings',
+            hero_label: 'Net Annual Return with Dishboard',
             hero_based_on: 'Based on',
             hero_more_post: ' more available with Cost Radar',
             lbl_gross_savings: 'Gross Savings',
@@ -839,7 +1005,7 @@
           },
 
           cz: {
-            step1: 'Země', step2: 'Podnik', step3: 'Čísla', step4: 'Úspory',
+            step1: 'Země', step2: 'Podnik', step3: 'Čísla', step4: 'Tarif', step5: 'Úspory',
             back: 'Zpět',
             continue_btn: 'Pokračovat',
             s2_heading: 'Jaký typ podniku provozujete?',
@@ -899,7 +1065,7 @@
             lbl_total: 'Celkem',
             btn_show_savings: 'Zobrazit moje úspory',
             back_to_plan: 'Zpět na tarif',
-            hero_label: 'Hrubé roční úspory',
+            hero_label: 'Čistý roční výnos s Dishboard',
             hero_based_on: 'Výpočet pro',
             hero_more_post: ' navíc s Cost Radar',
             lbl_gross_savings: 'Hrubé úspory',
@@ -938,7 +1104,7 @@
           },
 
           sk: {
-            step1: 'Krajina', step2: 'Podnik', step3: 'Čísla', step4: 'Úspory',
+            step1: 'Krajina', step2: 'Podnik', step3: 'Čísla', step4: 'Plán', step5: 'Úspory',
             back: 'Späť',
             continue_btn: 'Pokračovať',
             s2_heading: 'Aký typ podniku prevádzkujete?',
@@ -998,7 +1164,7 @@
             lbl_total: 'Celkom',
             btn_show_savings: 'Zobraziť moje úspory',
             back_to_plan: 'Späť na plán',
-            hero_label: 'Hrubé ročné úspory',
+            hero_label: 'Čistý ročný výnos s Dishboard',
             hero_based_on: 'Výpočet pre',
             hero_more_post: ' navyše s Cost Radar',
             lbl_gross_savings: 'Hrubé úspory',
@@ -1077,7 +1243,7 @@
           return val !== undefined ? val : key;
         },
         stepLabel(s) {
-          return this.t(['step1','step2','step3','step4'][s - 1]);
+          return this.t(['step1','step2','step3','step4','step5'][s - 1]);
         },
         btLabel(key) { return this.t('bt_' + key + '_label'); },
         btSub(key)   { return this.t('bt_' + key + '_sub'); },
@@ -1308,13 +1474,19 @@
           this.monthlyInvoices = Math.min(Math.max(this.monthlyInvoices, 10), 300);
         },
 
-        goToResults() {
+        goToPlan() {
+          const raw = Math.max(150, Math.min(300, this.monthlyInvoices));
+          this.planInvoices = Math.min(300, Math.ceil(raw / 50) * 50);
           this.step = 4;
+        },
+
+        goToResults() {
+          this.step = 5;
           this.$nextTick(() => this.animateCounter());
         },
 
         animateCounter(duration = 1600) {
-          const target = this.totalROI();
+          const target = this.netROI();
           const startValue = duration < 1600 ? this.displayTotal : 0;
           const startTime = performance.now();
           const easeOut = t => 1 - Math.pow(1 - t, 3);
